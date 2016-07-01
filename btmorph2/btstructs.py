@@ -412,7 +412,7 @@ class NeuronMorphology(object):
         plot_dendrogram(self)
         
     def plot_2D(self, color_scheme="default", color_mapping=None,
-                synapses=None, save_image=None, depth='y'):
+                synapses=None, save_image=None, depth='y',show_radius=True):
 
         """
         Gate way to btviz plot_2D_SWC to create object orientated relationship
@@ -454,7 +454,8 @@ class NeuronMorphology(object):
          ticks (`bar`) might not work as expected
 
         """
-        plot_2D(self, color_scheme, color_mapping, synapses, save_image, depth)
+        plot_2D(self, color_scheme, color_mapping, synapses, \
+                    save_image, depth,show_radius=show_radius)
 
     def get_points_of_interest(self):
         """

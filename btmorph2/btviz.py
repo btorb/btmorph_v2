@@ -35,7 +35,7 @@ max_height = 0
 
 
 def plot_2D(neuron, color_scheme="default", color_mapping=None,
-            synapses=None, save_image=None, depth='y'):
+            synapses=None, save_image=None, depth='y',show_radius=True):
     """
     2D matplotlib plot of a neuronal moprhology. Projection can be in XY and XZ.
     The SWC has to be formatted with a "three point soma".
@@ -63,16 +63,11 @@ def plot_2D(neuron, color_scheme="default", color_mapping=None,
     depth : string
         Default 'y' means that X represents the superficial to deep axis. \
         Otherwise, use 'z' to conform the mathematical standard of having the Z axis.
-
-    Notes
-    -----
-    If the soma is not located at [0,0,0], the scale bar (`bar_L`) and the ticks (`bar`) might not work \
-    as expected
-
     """
 
     # print "scheme: ", config.c_scheme_nm
-    plot_radius = 0.5
+    if show_radius==False:
+        plot_radius = config.fake_radius
 
     # my_color_list = ['r','g','b','c','m','y','k','g','DarkGray']
     if color_scheme == 'default':
@@ -112,7 +107,10 @@ def plot_2D(neuron, color_scheme="default", color_mapping=None,
         else:
             C = node
             P = node.parent
-            line_width = C.content['p3d'].radius
+            if show_radius==False:
+                line_width = plot_radius
+            else:
+                line_width = C.content['p3d'].radius
             if color_mapping is None:
                 pl = plt.plot([P.content['p3d'].xyz[0], C.content['p3d'].xyz[0]], [P.content['p3d'].xyz[ax],C.content['p3d'].xyz[ax]], my_color_list[C.content['p3d'].segtype-1], linewidth=line_width, zorder=1)
             else:
