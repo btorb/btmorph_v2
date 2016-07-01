@@ -63,6 +63,9 @@ def plot_2D(neuron, color_scheme="default", color_mapping=None,
     depth : string
         Default 'y' means that X represents the superficial to deep axis. \
         Otherwise, use 'z' to conform the mathematical standard of having the Z axis.
+    show_radius : boolean
+        True (default) to plot the actual radius. If set to False,
+        the radius will be taken from `btmorph2\config.py`
     """
 
     # print "scheme: ", config.c_scheme_nm
@@ -162,7 +165,7 @@ def plot_2D(neuron, color_scheme="default", color_mapping=None,
 
 
 def plot_3D(neuron, color_scheme="default", color_mapping=None,
-            synapses=None, save_image="animation"):
+            synapses=None, save_image="animation",show_radius=True):
     """
     3D matplotlib plot of a neuronal morphology. The SWC has to be formatted with a "three point soma".
     Colors can be provided and synapse location marked
@@ -186,9 +189,14 @@ def plot_3D(neuron, color_scheme="default", color_mapping=None,
     save_image: string
         Default is None. If present, should be in format "file_name.extension",
         and figure produced will be saved as this filename.
-
+    show_radius : boolean
+        True (default) to plot the actual radius. If set to False,
+        the radius will be taken from `btmorph2\config.py`
     """
 
+    if show_radius==False:
+        plot_radius = config.fake_radius
+    
     if color_scheme == 'default':
         my_color_list = config.c_scheme_default['neurite']
     elif color_scheme == 'neuromorpho':
@@ -230,8 +238,13 @@ def plot_3D(neuron, color_scheme="default", color_mapping=None,
             p_z = parent.content['p3d'].xyz[2]
             # p_r = parent.content['p3d'].radius
             # print 'index:', index, ', len(cs)=', len(color_mapping)
+            if show_radius==False:
+                line_width = plot_radius
+            else:
+                line_width = c_r/2.0
+            
             if color_mapping is None:
-                ax.plot([p_x, c_x], [p_y, c_y], [p_z, c_z], my_color_list[node.content['p3d'].segtype - 1], linewidth=c_r/2.0)
+                ax.plot([p_x, c_x], [p_y, c_y], [p_z, c_z], my_color_list[node.content['p3d'].segtype - 1], linewidth=line_width)
             else:
                 if isinstance(color_mapping[0], int):
                     c = scalarMap.to_rgba(color_mapping[index])

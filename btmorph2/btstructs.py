@@ -339,7 +339,7 @@ class NeuronMorphology(object):
         window = None
 
     def plot_3D(self, color_scheme="default", color_mapping=None,
-                synapses=None, save_image=None):
+                synapses=None, save_image=None,show_radius=True):
 
         """
         Gate way to btviz plot_3D_SWC to create object orientated relationship
@@ -369,8 +369,12 @@ class NeuronMorphology(object):
             Default is None. If present, should be in format
             "file_name.extension", and figure produced will be saved as
             this filename.
+        show_radius : boolean
+            True (default) to plot the actual radius. If set to False,
+            the radius will be taken from `btmorph2\config.py`
         """
-        plot_3D(self, color_scheme, color_mapping, synapses, save_image)
+        plot_3D(self, color_scheme, color_mapping, synapses, \
+                    save_image,show_radius=show_radius)
 
     def animate(self, color_scheme="default", color_mapping=None,
                 synapses=None, save_image="animation", axis="z"):
