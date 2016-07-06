@@ -1691,7 +1691,7 @@ class Tree(object):
                     all_nodes[index] = (swc_type, t_node, parent_index)
                 else:
                     print type,index
-                    
+
 
         # print "len(all_nodes): ", len(all_nodes)
                 # IF 1-point soma representation
