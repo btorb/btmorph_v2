@@ -1683,11 +1683,6 @@ class Tree(object):
                 radius = float(split[5].rstrip())
                 parent_index = int(split[6].rstrip())
 
-                # 2015-06-17
-                if self.soma_type == 0 and index > 1:
-                    index = index + 2
-                if self.soma_type == 0 and parent_index > 1:
-                    parent_index = parent_index+2
 
                 if swc_type in types:
                     tP3D = P3D(np.array([x, y, z]), radius, swc_type)
@@ -1695,12 +1690,11 @@ class Tree(object):
                     t_node.content = {'p3d': tP3D}
                     all_nodes[index] = (swc_type, t_node, parent_index)
                 else:
-                    # print type,index
-                    pass
+                    print type,index
+                    
 
         # print "len(all_nodes): ", len(all_nodes)
-
-        # IF 1-point soma representation
+                # IF 1-point soma representation
         if self.soma_type == 0:
             for index, (swc_type, node, parent_index) in all_nodes.items():
                 if index == 1:
@@ -1736,7 +1730,7 @@ class Tree(object):
                     self.add_node_with_parent(node, parent_node)
 
         # IF 3-point soma representation
-        if self.soma_type == 1:
+        elif self.soma_type == 1:
             for index, (swc_type, node, parent_index) in all_nodes.items():
                 if index == 1:
                     # print "Set soma -- 3 point soma"
@@ -1898,7 +1892,7 @@ class Tree(object):
         file.close()
         if somas == 3:
             return 1
-        elif somas ==1:
+        elif somas == 1:
             return 0
         elif somas > 3:
             return 2

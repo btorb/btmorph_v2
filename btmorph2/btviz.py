@@ -143,11 +143,11 @@ def plot_2D(neuron, color_scheme="default", color_mapping=None,
     plt.axis("equal")
 
     # color bar? in case `color_mapping` is used
-    if color_mapping is not None :
+    if color_mapping is not None:
         if isinstance(color_mapping[0], int):
             cb = plt.colorbar(CS3) # bit of a workaround, but it seems to work
-            ticks_f = np.linspace(np.min(color_mapping)-1,np.max(color_mapping)+1,5 )
-            ticks_i = map(int,ticks_f)
+            ticks_f = np.linspace(np.min(color_mapping),np.max(color_mapping),5 )
+            ticks_i = map(int, ticks_f)
             cb.set_ticks(ticks_i)
 
     # set the bg color
@@ -158,10 +158,10 @@ def plot_2D(neuron, color_scheme="default", color_mapping=None,
     elif color_scheme == 'neuromorpho':
         ax.set_axis_bgcolor(config.c_scheme_nm['bg'])
 
-    
     if save_image is not None:
         plt.savefig(save_image)
-    plt.show()
+    else:
+        plt.show()
 
 
 def plot_3D(neuron, color_scheme="default", color_mapping=None,
