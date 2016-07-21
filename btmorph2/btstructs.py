@@ -13,6 +13,7 @@ Sam Sutton refactored and renamed classes, implemented
     PopulationMorphology and NeuronMorphology
 """
 import sys
+import h5py
 import numpy as np
 
 from btmorph2.btviz import plot_2D
@@ -1204,7 +1205,12 @@ class Tree(object):
         """
         if input_file is not None:
             self.root = None
-            self.read_SWC_tree_from_file(input_file)
+            # check if SWC file or *NTF* file
+            extension = input_file.split(".")[-1] # string after last dot in file_name
+            if extension.lower()=="swc":
+                self.read_SWC_tree_from_file(input_file)
+            elif extension.lower()=="ntf":
+                self.read_NTF_tree_from_file(input_file)
         if (axis_config[0] is not 0 or axis_config[1]
                 is not 1 or axis_config[2] is not 2):  # switch axis
             if axis_config[0] == 0:
@@ -1643,8 +1649,123 @@ class Tree(object):
         if from_node.parent is not None:
             self._go_up_from_until(from_node.parent, to_node, n)
 
-    def read_SWC_tree_from_file(self, input_file, types=range(1, 10)):
+    def read_NTF_tree_from_file(self,input_file):
+        """
+        Non-specific for a "tree data structure"
+        Read and load a morphology from an NTF file and parse it into
+        an NeuronMorphology object.        
+        """
+        hf = h5py.File(input_file,"r")
+        ids = list(hf.get("swc/index"))
+        s_types = list(hf.get("swc/type"))
+        xs = list(hf.get("swc/x"))
+        ys = list(hf.get("swc/y"))
+        zs = list(hf.get("swc/z"))
+        rs = list(hf.get("swc/r"))
+        parents = list(hf.get("swc/parent_index"))
+        swc_set = hf['swc']        
+        soma_attr = swc_set.attrs['soma_type']
+        print("soma_attr:{}, len(xs)={}".format(soma_attr,len(xs)))
 
+        all_nodes = dict()
+        for i in range(len(xs)):
+            x = xs[i]
+            y = ys[i]
+            z = zs[i]
+            radius = rs[i]
+            swc_type = s_types[i]
+            index = ids[i]
+            parent_index = parents[i]
+            # create a node
+            tP3D = P3D(np.array([x, y, z]), radius, swc_type)
+            t_node = Node(index)
+            t_node.content = {'p3d': tP3D}
+            all_nodes[index] = (swc_type, t_node, parent_index)
+
+        # create an internal tree
+        if soma_attr=="1_point_soma":
+            for index, (swc_type, node, parent_index) in all_nodes.items():
+                if index == 1:
+                    # print "Set soma -- 1-point soma"
+                    self.root = node
+                    """add 2 extra point because the internal representation
+                    relies on the 3-point soma position.
+                    Shift all subsequent indices by 2."""
+                    sp = node.content['p3d']
+                    """
+                     1 1 xs ys zs rs -1
+                     2 1 xs (ys-rs) zs rs 1
+                     3 1 xs (ys+rs) zs rs 1
+                    """
+                    pos1 = P3D([sp.xyz[0], sp.xyz[1]-sp.radius,
+                                sp.xyz[2]], sp.radius, 1)
+                    pos2 = P3D([sp.xyz[0], sp.xyz[1]+sp.radius,
+                                sp.xyz[2]], sp.radius, 1)
+                    sub1 = Node(2)
+                    sub1.content = {'p3d': pos1}
+                    sub2 = Node(3)
+                    sub2.content = {'p3d': pos2}
+                    self.add_node_with_parent(sub1, self.root)
+                    self.add_node_with_parent(sub2, self.root)
+                else:
+                    parent_node = all_nodes[parent_index][1]
+                    if parent_node is None:
+                        print("parent appears to be NONE")
+                    if parent_node.index > 1:
+                        parent_node.index = parent_node.index  # +2
+                    if node.index > 1:
+                        node.index = node.index  # +2
+                    self.add_node_with_parent(node, parent_node)        
+        # IF 3-point soma representation
+        elif soma_attr=="3_point_soma":
+            for index, (swc_type, node, parent_index) in all_nodes.items():
+                if index == 1:
+                    # print "Set soma -- 3 point soma"
+                    self.root = node
+                elif index in (2, 3):
+                    # the 3-point soma representation
+                    # (http://neuromorpho.org/neuroMorpho/SomaFormat.html)
+                    self.add_node_with_parent(node, self.root)
+                else:
+                    parent_node = all_nodes[parent_index][1]
+                    self.add_node_with_parent(node, parent_node)
+        # IF multiple cylinder soma representation
+        elif soma_attr=="multiple_cylinder_soma":
+            self.root = all_nodes[1][1]
+
+            # get all some info
+            soma_cylinders = []
+            connected_to_root = []
+            for index, (swc_type, node, parent_index) in all_nodes.items():
+                if swc_type == 1 and not index == 1:
+                    soma_cylinders.append((node, parent_index))
+                    if index > 1:
+                        connected_to_root.append(index)
+
+            # make soma
+            s_node_1, s_node_2 = self._make_soma_from_cylinders(soma_cylinders,
+                                                                all_nodes)
+
+            # add soma
+            self.root = all_nodes[1][1]
+            self.root.content["p3d"].radius = s_node_1.content["p3d"].radius
+            self.add_node_with_parent(s_node_1, self.root)
+            self.add_node_with_parent(s_node_2, self.root)
+
+            # add the other points
+            for index, (swc_type, node, parent_index) in all_nodes.items():
+                if swc_type == 1:
+                    pass
+                else:
+                    parent_node = all_nodes[parent_index][1]
+                    if parent_node.index in connected_to_root:
+                        self.add_node_with_parent(node, self.root)
+                    else:
+                        self.add_node_with_parent(node, parent_node)
+
+        return self                    
+                            
+    def read_SWC_tree_from_file(self, input_file, types=range(1, 10)):
         """
         Non-specific for a "tree data structure"
         Read and load a morphology from an SWC file and parse it into
@@ -1659,9 +1780,8 @@ class Tree(object):
 
         However, two other options to describe the soma
         are still allowed and available, namely:
-        - soma absent: btmorph adds a 3-point soma in between of
-            [TO DEFINE/TODO]
-        - multiple cylinder: [TO DEFINE/TODO]
+        - one-point soma
+        - multiple cylinder soma
 
         """
         # check soma-representation: 3-point soma or a non-standard
