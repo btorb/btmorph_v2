@@ -32,9 +32,11 @@ def swc_to_ntf(file_name,out_file=None):
     ys = [n.content['p3d'].xyz[1] for n in all_nodes]
     zs = [n.content['p3d'].xyz[2] for n in all_nodes]
     rs = [n.content['p3d'].radius for n in all_nodes]
-    s_types = xs = [n.content['p3d'].segtype for n in all_nodes]
+    s_types = [n.content['p3d'].segtype for n in all_nodes]
     for i,p in zip(ids,parents):
         print("{} has parent: {}".format(i,p))
+
+    print("xs: {}".format(xs))
 
     # create HDF5 NTF file
     if out_file == None:
