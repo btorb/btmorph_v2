@@ -9,7 +9,7 @@ import h5py
 import numpy as np
 from btmorph2.btstructs import NeuronMorphology
 
-def swc_to_ntf(file_name,out_file=None):
+def swc_to_nmf(file_name,out_file=None):
     """
     Load an SWC file and store in NTF format based on HDF5.
     Uses NeuronMorphology to load file as it automatically deals
@@ -37,7 +37,7 @@ def swc_to_ntf(file_name,out_file=None):
     #     print("{} has parent: {}".format(i,p))
 
     # print("xs: {}".format(xs))
-
+    
     # create HDF5 NTF file
     if out_file == None:
         out_file = file_name+".nmf"
@@ -81,5 +81,5 @@ def curate_ntf():
 if __name__=="__main__":
     import sys
     fn = sys.argv[1]
-    swc_to_ntf(file_name=fn)
+    swc_to_nmf(file_name=fn)
     

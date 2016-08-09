@@ -582,7 +582,7 @@ class NeuronMorphology(object):
                 p = Node.parent.content['p3d']
                 d = np.sqrt(np.sum((n.xyz-p.xyz)**2))
                 L += d
-
+                
         return L
 
     def total_surface(self):
@@ -1205,12 +1205,12 @@ class Tree(object):
         """
         if input_file is not None:
             self.root = None
-            # check if SWC file or *NTF* file
+            # check if SWC file or *NMF* file
             extension = input_file.split(".")[-1] # string after last dot in file_name
             if extension.lower()=="swc":
                 self.read_SWC_tree_from_file(input_file)
-            elif extension.lower()=="ntf":
-                self.read_NTF_tree_from_file(input_file)
+            elif extension.lower()=="nmf":
+                self.read_NMF_tree_from_file(input_file)
         if (axis_config[0] is not 0 or axis_config[1]
                 is not 1 or axis_config[2] is not 2):  # switch axis
             if axis_config[0] == 0:
@@ -1649,7 +1649,7 @@ class Tree(object):
         if from_node.parent is not None:
             self._go_up_from_until(from_node.parent, to_node, n)
 
-    def read_NTF_tree_from_file(self,input_file):
+    def read_NMF_tree_from_file(self,input_file):
         """
         Non-specific for a "tree data structure"
         Read and load a morphology from an NTF file and parse it into
