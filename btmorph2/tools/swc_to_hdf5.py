@@ -1,6 +1,6 @@
 """
-Converter to translate SWC format to NTF format. (NTF, Neuronal Tissue
-format is a temporary working name)
+Converter to translate SWC format to NMF format. 
+(NMF: Neuronal Morphology Format; a temporary working name)
 
 Benjamin Torben-Nielsen, btorbennielsen@gmail.com
 """
@@ -9,7 +9,7 @@ import h5py
 import numpy as np
 from btmorph2.btstructs import NeuronMorphology
 
-def swc_to_ntf(file_name,out_file=None):
+def swc_to_nmf(file_name,out_file=None):
     """
     Load an SWC file and store in NTF format based on HDF5.
     Uses NeuronMorphology to load file as it automatically deals
@@ -33,14 +33,14 @@ def swc_to_ntf(file_name,out_file=None):
     zs = [n.content['p3d'].xyz[2] for n in all_nodes]
     rs = [n.content['p3d'].radius for n in all_nodes]
     s_types = [n.content['p3d'].segtype for n in all_nodes]
-    for i,p in zip(ids,parents):
-        print("{} has parent: {}".format(i,p))
+    # for i,p in zip(ids,parents):
+    #     print("{} has parent: {}".format(i,p))
 
-    print("xs: {}".format(xs))
-
+    # print("xs: {}".format(xs))
+    
     # create HDF5 NTF file
     if out_file == None:
-        out_file = file_name+".ntf"
+        out_file = file_name+".nmf"
     f = h5py.File(out_file, "w")
     print("f.name: {}".format(f))
     
@@ -81,5 +81,5 @@ def curate_ntf():
 if __name__=="__main__":
     import sys
     fn = sys.argv[1]
-    swc_to_ntf(file_name=fn)
+    swc_to_nmf(file_name=fn)
     
