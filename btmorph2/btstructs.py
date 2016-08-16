@@ -1159,7 +1159,13 @@ class NeuronMorphology(object):
             return 1
         # Not leaf
         childrenHS = map(self.local_horton_strahler, node.children)
-        return max(childrenHS + [(min(childrenHS)+1)])
+        if len(node.children) == 1:
+            return max(childrenHS + [(min(childrenHS))])
+        elif len(node.children) == 2:
+            return max(childrenHS + [(min(childrenHS)+1)])
+        else:
+            return max(childrenHS)        
+        
 
     def get_boundingbox(self):
         '''
