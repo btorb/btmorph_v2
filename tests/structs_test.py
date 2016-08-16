@@ -350,6 +350,9 @@ def setup_func_small_tree():
     test_neurons.append(NeuronMorphology("tests/horton-strahler_" +
                                        "test_wiki_3pointsoma.swc"))
 
+    # 2 - Unbrached tree for additional Strahler check
+    test_neurons.append(NeuronMorphology("tests/straight_strahler_test.swc"))
+
 
 def teardown_func_small_tree():
     """
@@ -378,6 +381,7 @@ def test_local_horton_strahler():
 def test_global_horton_strahler():
     global test_neurons
     assert(4 == test_neurons[1].global_horton_strahler())
+    assert(1 == test_neurons[2].global_horton_strahler())
     pass
 
 
