@@ -213,9 +213,12 @@ class NeuronMorphology(object):
             raise Exception("Axes incorrectly set, \
                              ensure each axis is set correctly")
 
-        if input_file is not None:
-            self.axis_config = axis_config
-            self.file = input_file
+        self._tree = Tree(input_file, axis_config)
+        self._all_nodes = self.tree.get_nodes()
+
+        # compute some of the most used stats +
+        self._soma_points, self._bif_points, self._end_points = \
+            self.get_points_of_interest()            
 
         if pca_translate:
             self.get_tree().pca_project_tree()
@@ -230,60 +233,22 @@ class NeuronMorphology(object):
                 for n in self.get_tree().get_nodes():
                     n.content['p3d'].xyz = n.content['p3d'].xyz + translate
 
-    def set_file(self, input_file):
+    def set_tree(self,tree):
         """
-        Set the SWC file
-
-        Parameters
-        -----------
-        input_file : :class:`str`
-            File name of neuron to be created,
+        Set the Tree object associated with this NeuronMorphology.
+        Not implemented at this moment!!!
         """
-        self.__file = input_file
-        self.tree = None
-
-    def get_file(self):
-
-        """
-        Obtain the root Node
-
-        Returns
-        -------
-        root : :class:`Node`
-        """
-        return self.__file
-    file = property(get_file, set_file)
-
-    def set_tree(self, tree=None):
-
-        """
-        Set the SWC file
-
-        Parameters
-        -----------
-        input_file : :class:`str`
-            File name of neuron to be created,
-        """
-        if tree is None:
-            self.__tree = Tree(self.file, self.axis_config)
-        else:
-            self.__tree = tree
-        self._all_nodes = self.tree.get_nodes()
-
-        # compute some of the most used stats +
-        self._soma_points, self._bif_points, self._end_points = \
-            self.get_points_of_interest()
-
+        print("set_tree not implemented")
+                    
     def get_tree(self):
-
         """
-        Obtain the root Node
+        Obtain the Tree object contained in this NeuronMorphology.
 
         Returns
         -------
         root : :class:`Node`
         """
-        return self.__tree
+        return self._tree
     tree = property(get_tree, set_tree)
 
     def plot_3DGL(self, displaysize=(800, 600), zoom=10, poly=True,
@@ -506,7 +471,7 @@ class NeuronMorphology(object):
              soma surface in micron squared
         """
 
-        r = self.__tree.get_node_with_index(1).content['p3d'].radius
+        r = self._tree.get_node_with_index(1).content['p3d'].radius
         return 4.0*np.pi*r*r
 
     def no_bifurcations(self):
@@ -547,7 +512,7 @@ class NeuronMorphology(object):
         no_stems : int
             number of stems
         """
-        return len(self.__tree.root.children)-2
+        return len(self._tree.root.children)-2
 
     def no_nodes(self):
         """
@@ -560,7 +525,7 @@ class NeuronMorphology(object):
         no_nodes: int
             number of stems
         """
-        return self.__tree.get_nodes().__len__()
+        return self._tree.get_nodes().__len__()
 
     def total_length(self):
         """
@@ -582,7 +547,6 @@ class NeuronMorphology(object):
                 p = Node.parent.content['p3d']
                 d = np.sqrt(np.sum((n.xyz-p.xyz)**2))
                 L += d
-                
         return L
 
     def total_surface(self):
@@ -708,7 +672,7 @@ class NeuronMorphology(object):
         ---------
         Horton-Strahler number at the root
         """
-        return self.local_horton_strahler(self.__tree.root)
+        return self.local_horton_strahler(self._tree.root)
 
     """
     Local measures
@@ -747,11 +711,11 @@ class NeuronMorphology(object):
         """
         # updated 2014-01-21 for compatibility with new btstructs2
         L = 0
-        if self.__tree.is_leaf(to_node):
-            path = self.__tree.path_to_root(to_node)
+        if self._tree.is_leaf(to_node):
+            path = self._tree.path_to_root(to_node)
             L = 0
         else:
-            path = self.__tree.path_to_root(to_node)[1:]
+            path = self._tree.path_to_root(to_node)[1:]
             p = to_node.parent.content['p3d']
             n = to_node.content['p3d']
             d = np.sqrt(np.sum((n.xyz-p.xyz)**2))
@@ -785,11 +749,11 @@ class NeuronMorphology(object):
         """
 
         L = 0
-        if self.__tree.is_leaf(from_node):
-            path = self.__tree.path_to_root(from_node)
+        if self._tree.is_leaf(from_node):
+            path = self._tree.path_to_root(from_node)
             L = 0
         else:
-            path = self.__tree.path_to_root(from_node)[1:]
+            path = self._tree.path_to_root(from_node)[1:]
             p = from_node.parent.content['p3d']
             n = from_node.content['p3d']
             d = np.sqrt(np.sum((n.xyz-p.xyz)**2))
@@ -820,10 +784,10 @@ class NeuronMorphology(object):
 
         """
         L = 0
-        if self.__tree.is_leaf(to_node):
-            path = self.__tree.path_to_root(to_node)
+        if self._tree.is_leaf(to_node):
+            path = self._tree.path_to_root(to_node)
         else:
-            path = self.__tree.path_to_root(to_node)[1:]
+            path = self._tree.path_to_root(to_node)[1:]
 
         n = to_node.content['p3d']
         for Node in path:
@@ -849,7 +813,7 @@ class NeuronMorphology(object):
 
         """
         n = from_node.content['p3d']
-        p = self.__tree.root.content['p3d']
+        p = self._tree.root.content['p3d']
         d = np.sqrt(np.sum((n.xyz-p.xyz)**2))
         return d
 
@@ -888,7 +852,7 @@ class NeuronMorphology(object):
             order of the subneuron rooted at Node
 
         """
-        return self.__tree.order_of_node(node)
+        return self._tree.order_of_node(node)
 
     def partition_asymmetry(self, node):
         """
@@ -909,8 +873,8 @@ class NeuronMorphology(object):
         """
         if node.children is None or len(node.children) == 1:
             return None
-        d1 = self.__tree.degree_of_node(node.children[0])
-        d2 = self.__tree.degree_of_node(node.children[1])
+        d1 = self._tree.degree_of_node(node.children[0])
+        d2 = self._tree.degree_of_node(node.children[1])
         if(d1 == 1 and d2 == 1):
             return 0  # by definition
         else:
@@ -1200,7 +1164,6 @@ class Tree(object):
     '''
 
     def __init__(self, input_file=None, axis_config=[0, 1, 2]):
-
         """
         Default constructor.
 
@@ -1210,7 +1173,6 @@ class Tree(object):
             File name of neuron to be created,
         """
         if input_file is not None:
-            self.root = None
             # check if SWC file or *NMF* file
             extension = input_file.split(".")[-1] # string after last dot in file_name
             if extension.lower()=="swc":
@@ -1248,12 +1210,10 @@ class Tree(object):
         Node : :class:`Node`
             to-be-root Node
         """
-        if node is not None:
-            node.parent = None
-        self.__root = node
+        node.parent = None
+        self._root = node
 
     def get_root(self):
-
         """
         Obtain the root Node
 
@@ -1261,7 +1221,7 @@ class Tree(object):
         -------
         root : :class:`Node`
         """
-        return self.__root
+        return self._root
     root = property(get_root, set_root)
 
     def is_root(self, node):
@@ -1809,7 +1769,6 @@ class Tree(object):
                 radius = float(split[5].rstrip())
                 parent_index = int(split[6].rstrip())
 
-
                 if swc_type in types:
                     tP3D = P3D(np.array([x, y, z]), radius, swc_type)
                     t_node = Node(index)
@@ -1818,9 +1777,7 @@ class Tree(object):
                 else:
                     print type,index
 
-
-        # print "len(all_nodes): ", len(all_nodes)
-                # IF 1-point soma representation
+        # IF 1-point soma representation
         if self.soma_type == 0:
             for index, (swc_type, node, parent_index) in all_nodes.items():
                 if index == 1:
@@ -1905,7 +1862,6 @@ class Tree(object):
         return self
 
     def write_SWC_tree_to_file(self, input_file):
-
         """
         Non-specific for a tree.
 
