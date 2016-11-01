@@ -3,6 +3,7 @@ bif_cloud*
 *~
 *#
 tests/v_e_moto1.CNG.swc.nmf
+examples/*.nmf
 
 .rope*
 
