@@ -2,6 +2,7 @@ bif_cloud*
 *.pyc
 *~
 *#
+tests/v_e_moto1.CNG.swc.nmf
 
 .rope*
 

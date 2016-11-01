@@ -47,16 +47,16 @@ def swc_to_nmf(file_name,out_file=None):
     swc_grp = f.create_group("swc")
     swc_grp.create_dataset("index",data=ids,dtype="int32")
     swc_grp.create_dataset("type",data=s_types,dtype="int8")
-    swc_grp.create_dataset("x",data=xs,dtype="float32")
-    swc_grp.create_dataset("y",data=ys,dtype="float32")
-    swc_grp.create_dataset("z",data=zs,dtype="float32")
-    swc_grp.create_dataset("r",data=rs,dtype="float32")
+    swc_grp.create_dataset("x",data=xs,dtype="float64")
+    swc_grp.create_dataset("y",data=ys,dtype="float64")
+    swc_grp.create_dataset("z",data=zs,dtype="float64")
+    swc_grp.create_dataset("r",data=rs,dtype="float64")
     swc_grp.create_dataset("parent_index",data=parents,dtype="int32")
     # add meta-data about the SWC soma-type
     """internally used codes for soma types are btmorph specific
     From btstructs.Tree._determine_soma_type
     soma_type : int
-        Integer indicating one of the su[pported SWC soma formats.
+        Integer indicating one of the supported SWC soma formats.
         0: 1-point soma
         1: Default three-point soma
         2: multiple cylinder description,
