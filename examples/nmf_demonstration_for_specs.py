@@ -125,7 +125,7 @@ def create_static_subcell():
     f = h5py.File(cdir+"/example_static_subcell.nmf", "w")
     print("f.name: {}".format(f))
 
-    # add time_lapse/1
+    # add /swc data
     ids = [1,2,3,4,5,6,7,8,9,10,11,12]
     s_types = [3,3,3,3,3,3,3,3,3,3,3,3]
     parents = [-1,1,2,3,4,5,6,7,4,9,10,11]
@@ -148,17 +148,69 @@ def create_static_subcell():
     # add annotations for subcellular domains as visualized with
     # additional markers in distinct channels
     # two channels used as illustration
-    chan0_grp = f.create_group("channel_0")
-    chan0_grp.attrs["channel"]=np.string_("GFP")
-    chan0_data = [0,0.25,0.25,0.5,0.5,1,1,0.25,0.5,0.75,0.75,0.75]
-    chan0_grp.create_dataset("intensity",data=chan0_data,dtype="float32")
-    
+
+    # channel_1: GFP
     chan1_grp = f.create_group("channel_1")
-    chan1_grp.attrs["channel"]=np.string_("RFP")
-    chan1_data = [0,0.25,0.25,0,1,1,0,0.25,0.75,1,1,0.5]
-    chan1_grp.create_dataset("intensity",data=chan1_data,dtype="float32") 
+    chan1_grp.attrs["channel"]=np.string_("GFP")
+    chan1_data = [0,0.25,0.25,0.5,0.5,1,1,0.25,0.5,0.75,0.75,0.75]
+    chan1_grp.create_dataset("intensity",data=chan1_data,dtype="float32")
+
+    # channel_2: RFP
+    chan2_grp = f.create_group("channel_2")
+    chan2_grp.attrs["channel"]=np.string_("RFP")
+    chan2_data = [0,0.25,0.25,0,1,1,0,0.25,0.75,1,1,0.5]
+    chan2_grp.create_dataset("intensity",data=chan2_data,dtype="float32")
+
+def create_dynamic_subcell():
+    cdir = os.path.dirname(os.path.abspath(__file__))
+    f = h5py.File(cdir+"/example_dynamic_subcell.nmf", "w")
+    print("f.name: {}".format(f))
+
+    # add static structure
+    ids = [1,2,3,4,5,6,7,8,9,10,11,12]
+    s_types = [3,3,3,3,3,3,3,3,3,3,3,3]
+    parents = [-1,1,2,3,4,5,6,7,4,9,10,11]
+    xs = [149,140,136,130,125,118,112,105,145,153,161,167]
+    ys = [98,112,130,140,152,164,175,184,150,166,172,178]
+    zs = [0,0,0,0,0,0,0,0,0,0,0,0]
+    rs = [0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6]
+
+    # create the, here static, morphology.
+    swc_grp = f.create_group("swc")
+    swc_grp.attrs["soma_type"]=np.string_("1_point_soma")
+    swc_grp.create_dataset("index",data=ids,dtype="int32")
+    swc_grp.create_dataset("type",data=s_types,dtype="int8")
+    swc_grp.create_dataset("x",data=xs,dtype="float64")
+    swc_grp.create_dataset("y",data=ys,dtype="float64")
+    swc_grp.create_dataset("z",data=zs,dtype="float64")
+    swc_grp.create_dataset("r",data=rs,dtype="float64")
+    swc_grp.create_dataset("parent_index",data=parents,dtype="int32")
+
+    # create time_lapse group 1
+    t_events=["new_point","new_point","new_point"] # string entries for now
+    tl_group = f.create_group("time_lapse")
+    tl_group_1 = tl_group.create_group("1")
+
+    # channel_0: GFP
+    chan0_grp = tl_group_1.create_group("channel_0")
+    chan0_grp.attrs["channel"]=np.string_("GFP")
+    chan0_data = [0,0.25,0.25,0.5,0.5,1,1,0.25,0,0,0,0]
+    print(len(chan0_data))
+    chan0_grp.create_dataset("intensity",data=chan0_data,dtype="float32")
+
+    # create time_lapse group 2
+    t_events=["new_point","new_point","new_point"] # string entries for now
+    tl_group_2 = tl_group.create_group("2")
+
+    # channel_0: GFP, but now with values during time 2
+    chan0_grp = tl_group_2.create_group("channel_0")
+    chan0_grp.attrs["channel"]=np.string_("GFP")
+    chan0_data = [0,0,0,0,0,0,0,0,0.2,0.3,0.4,0.5]
+    print(len(chan0_data))
+    chan0_grp.create_dataset("intensity",data=chan0_data,dtype="float32")    
     
 if __name__=="__main__":
     create_example_B()
     create_example_C()
     create_static_subcell()
+    create_dynamic_subcell()
