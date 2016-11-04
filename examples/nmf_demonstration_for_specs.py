@@ -153,13 +153,13 @@ def create_static_subcell():
     chan1_grp = f.create_group("channel_1")
     chan1_grp.attrs["channel"]=np.string_("GFP")
     chan1_data = [0,0.25,0.25,0.5,0.5,1,1,0.25,0.5,0.75,0.75,0.75]
-    chan1_grp.create_dataset("intensity",data=chan1_data,dtype="float32")
+    chan1_grp.create_dataset("intensity",data=chan1_data,dtype="float64")
 
     # channel_2: RFP
     chan2_grp = f.create_group("channel_2")
     chan2_grp.attrs["channel"]=np.string_("RFP")
     chan2_data = [0,0.25,0.25,0,1,1,0,0.25,0.75,1,1,0.5]
-    chan2_grp.create_dataset("intensity",data=chan2_data,dtype="float32")
+    chan2_grp.create_dataset("intensity",data=chan2_data,dtype="float64")
 
 def create_dynamic_subcell():
     cdir = os.path.dirname(os.path.abspath(__file__))
@@ -195,8 +195,7 @@ def create_dynamic_subcell():
     chan0_grp = tl_group_1.create_group("channel_0")
     chan0_grp.attrs["channel"]=np.string_("GFP")
     chan0_data = [0,0.25,0.25,0.5,0.5,1,1,0.25,0,0,0,0]
-    print(len(chan0_data))
-    chan0_grp.create_dataset("intensity",data=chan0_data,dtype="float32")
+    chan0_grp.create_dataset("intensity",data=chan0_data,dtype="float64")
 
     # create time_lapse group 2
     t_events=["new_point","new_point","new_point"] # string entries for now
@@ -206,8 +205,7 @@ def create_dynamic_subcell():
     chan0_grp = tl_group_2.create_group("channel_0")
     chan0_grp.attrs["channel"]=np.string_("GFP")
     chan0_data = [0,0,0,0,0,0,0,0,0.2,0.3,0.4,0.5]
-    print(len(chan0_data))
-    chan0_grp.create_dataset("intensity",data=chan0_data,dtype="float32")    
+    chan0_grp.create_dataset("intensity",data=chan0_data,dtype="float64")    
     
 if __name__=="__main__":
     create_example_B()
