@@ -191,22 +191,22 @@ def create_dynamic_subcell():
     tl_group = f.create_group("time_lapse")
     tl_group_1 = tl_group.create_group("1")
 
-    # channel_0: GFP
-    chan0_grp = tl_group_1.create_group("channel_0")
-    chan0_grp.attrs["channel"]=np.string_("GFP")
-    chan0_data = [0,0.25,0.25,0.5,0.5,1,1,0.25,0,0,0,0]
-    chan0_grp.create_dataset("intensity",data=chan0_data,dtype="float64")
+    # channel_1: GFP
+    chan1_grp = tl_group_1.create_group("channel_1")
+    chan1_grp.attrs["channel"]=np.string_("GFP")
+    chan1_data = [0,0.25,0.25,0.5,0.5,1,1,0.25,0,0,0,0]
+    chan1_grp.create_dataset("intensity",data=chan1_data,dtype="float64")
 
     # create time_lapse group 2
     t_events=["new_point","new_point","new_point"] # string entries for now
     tl_group_2 = tl_group.create_group("2")
 
     # channel_0: GFP, but now with values during time 2
-    chan0_grp = tl_group_2.create_group("channel_0")
-    chan0_grp.attrs["channel"]=np.string_("GFP")
-    chan0_data = [0,0,0,0,0,0,0,0,0.2,0.3,0.4,0.5]
-    chan0_grp.create_dataset("intensity",data=chan0_data,dtype="float64")    
-    
+    chan1_grp = tl_group_2.create_group("channel_1")
+    chan1_grp.attrs["channel"]=np.string_("GFP")
+    chan1_data = [0,0,0,0,0,0,0,0,0.2,0.3,0.4,0.5]
+    chan1_grp.create_dataset("intensity",data=chan1_data,dtype="float64")    
+
 if __name__=="__main__":
     create_example_B()
     create_example_C()

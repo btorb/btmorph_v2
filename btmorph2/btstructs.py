@@ -1155,13 +1155,13 @@ class NeuronMorphology(object):
 
 
 class Tree(object):
-    '''
+    """
     Tree for use with a Node (:class:`Node`).
 
     While the class is designed to contain binary trees (for neuronal
     morphologies)the number of children is not limited. As such,
     this is a generic implementation of a tree structure as a linked list.
-    '''
+    """
 
     def __init__(self, input_file=None, axis_config=[0, 1, 2]):
         """
