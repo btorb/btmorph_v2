@@ -162,4 +162,4 @@ Citation
 
 If you use this software, please cite the following peer-reviewed news item published in the Neuroinformatics journal.
 
-*B. Torben-Nielsen, An efficient and extendable Python library to analyze neuronal morphologies. Neuroinformatics, 12:619-622 (2014) (<a href "http://link.springer.com/article/10.1007/s12021-014-9232-7">here</a>)*
+*B. Torben-Nielsen, An efficient and extendable Python library to analyze neuronal morphologies. Neuroinformatics, 12:619-622 (2014) (`installation <http://link.springer.com/article/10.1007/s12021-014-9232-7>`_).*
