@@ -53,7 +53,7 @@ The tree is implemented as a linked list data structure (Tree). Each item in the
 
 Schematically, it looks like this:
 
-.. image:: figures/data_structure.png
+.. image:: docs/figures/data_structure.png
   :scale: 50
 
 .. _design_requirements:
@@ -150,7 +150,7 @@ In the top directory of the package (:code:`btmorph_v2`) open :code:`ipython --p
 
 The last command will have saved the following figure in PNG format.
 
-.. image:: figures/examplar_2D.png
+.. image:: docs/figures/examplar_2D.png
   :scale: 50
 
 References
