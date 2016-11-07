@@ -4,9 +4,9 @@ btmorph v2
 Introduction
 ------------
 
-Small Python library containing a data structure and tools to represent and analyze neuronal morphologies stored in the *de facto* standard SWC format [#f1]_ . See :ref:`design_requirements` below.
+Small Python library containing a data structure and tools to represent and analyze neuronal morphologies stored in the *de facto* standard SWC format [#f1]_ . 
 
-v2 is a refactored version and an object-oriented design. As such, the features can be expanded easily in the future.
+v2 is a refactored version and an object-oriented design. As such, the features can be expanded easily in the future. Moreover, btmorph_v2 has experimental support for the new Neuronal Morphology Format (NMF).
 
 Installation
 ------------
@@ -54,7 +54,7 @@ The tree is implemented as a linked list data structure (Tree). Each item in the
 Schematically, it looks like this:
 
 .. image:: docs/figures/data_structure.png
-  :scale: 50
+  :scale: 25
 
 .. _design_requirements:
 
@@ -151,7 +151,7 @@ In the top directory of the package (:code:`btmorph_v2`) open :code:`ipython --p
 The last command will have saved the following figure in PNG format.
 
 .. image:: docs/figures/examplar_2D.png
-  :scale: 50
+  :scale: 25
 
 References
 
