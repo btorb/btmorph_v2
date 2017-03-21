@@ -709,6 +709,129 @@ class NeuronMorphology(object):
         """
         return self.local_horton_strahler(self.__tree.root)
 
+    def max_EucDistance_from_root(self):
+
+        """
+        Returns the Euclidean distance of the node which has the maximum Euclidean distance from the root.
+
+
+        Parameters
+        ---------
+
+        Returns
+        ---------
+        float
+
+        """
+
+        return max(map(self.get_Euclidean_length_to_root, self._end_points))
+
+    def max_pathLength_from_root(self):
+
+        """
+        Returns the path length of the node which has the maximum path length from the root.
+
+
+        Parameters
+        ---------
+
+        Returns
+        ---------
+        float
+
+        """
+
+        return max(map(self.get_pathlength_to_root, self._end_points))
+
+    def max_centrifugal_order(self):
+
+        """
+        Returns the maximum of the centrifugal orders of all nodes in the tree.
+
+
+        Parameters
+        ---------
+
+        Returns
+        ---------
+        float
+
+        """
+
+        return max(map(self.order_of_node, self._end_points))
+
+    def max_bif_angle(self):
+
+        """
+        Returns the maximum of the bifurcation angles of all bifurcation nodes in the tree.
+
+
+        Parameters
+        ---------
+
+        Returns
+        ---------
+        float
+
+        """
+        if len(self._bif_points):
+            return max(map(self.bifurcation_angle_vec, self._bif_points))
+        else:
+            return float('nan')
+
+    def avg_bif_angle(self):
+
+        """
+        Returns the average of the bifurcation angles of all bifurcation nodes in the tree.
+
+
+        Parameters
+        ---------
+
+        Returns
+        ---------
+        float
+
+        """
+        if len(self._bif_points):
+            return float(np.mean(map(self.bifurcation_angle_vec, self._bif_points)))
+        else:
+            return float('nan')
+
+    def avg_partition_asymmetry(self):
+        """
+        Returns the average of the partition assymetries of all bifurcation nodes in the tree.
+
+
+        Parameters
+        ---------
+
+        Returns
+        ---------
+        float
+
+        """
+        if len(self._bif_points):
+            return float(np.mean(map(self.partition_asymmetry, self._bif_points)))
+        else:
+            return float('nan')
+
+    def avg_diameter(self):
+        """
+        Returns the average of the diameters of all nodes in the tree.
+
+
+        Parameters
+        ---------
+
+        Returns
+        ---------
+        float
+
+        """
+
+        return float(np.mean(self.get_diameters()))
+
     """
     Local measures
     """
