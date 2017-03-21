@@ -832,6 +832,48 @@ class NeuronMorphology(object):
 
         return float(np.mean(self.get_diameters()))
 
+    def avg_Burke_taper(self):
+        """
+        Calculate the average Burke taper of all paths in the tree.
+        A path is defined as a stretch between
+        the soma and a bifurcation point, between bifurcation points,
+        or in between of a bifurcation point and a terminal point
+
+        Parameters
+        ---------
+
+        Returns
+        ---------
+        (average_Burke_taper, all_Burke_tapers): (float, list)
+        A tuple of the average Burke taper for the tree and a list of Burke tapers of all paths of the tree.
+
+        """
+
+        burkeTapers = map(self.Burke_taper, self._end_points + self._bif_points)
+
+        return float(np.mean(burkeTapers)), burkeTapers
+
+    def avg_tortuosity(self):
+        """
+        Calculate the average tortuosity of all paths in the tree.
+        A path is defined as a stretch between
+        the soma and a bifurcation point, between bifurcation points,
+        or in between of a bifurcation point and a terminal point
+
+        Parameters
+        ---------
+
+        Returns
+        ---------
+        (average_tortuosity, all_Burke_tapers): (float, list)
+        A tuple of the average tortuosity for all paths in the tree and a list of Burke tapers of all paths in the tree.
+
+        """
+
+        totuosities = map(self.tortuosity, self._end_points + self._bif_points)
+
+        return float(np.mean(totuosities)), totuosities
+
     """
     Local measures
     """
@@ -1282,6 +1324,76 @@ class NeuronMorphology(object):
         # Not leaf
         childrenHS = map(self.local_horton_strahler, node.children)
         return max(childrenHS + [(min(childrenHS)+1)])
+
+    def Burke_taper(self, node):
+        """
+        Calculate burke tapers of the path ending at the given node.
+        A path is defined as a stretch between
+        the soma and a bifurcation point, between bifurcation points,
+        or between a bifurcation point and a terminal point
+
+        Burke taper = (d_e - d_s) / l
+        where d_e and d_s are the diameters at the end and start, respectively, of a path.
+
+
+        Ref: Burke, R E, W B Marks, and B Ulfhake.
+        "A Parsimonious Description of Motoneuron Dendritic Morphology Using Computer Simulation."
+        The Journal of neuroscience (1992)
+
+        Parameters
+        ---------
+        node : :class:`btmorph.btstructs2.SNode2`
+            Node of interest
+        Returns
+        ---------
+        list
+            List of burke tapers, each corresponding to one child
+        """
+        assert node in self._end_points + self._bif_points, \
+            'Burke Taper can only be calculated for the end_point or a bifurcation'
+
+        d_e = 2 * node.content['p3d'].radius
+
+
+        if self.__tree.is_leaf(node):
+            path = self.__tree.path_to_root(node)
+        else:
+            path = self.__tree.path_to_root(node)[1:]
+
+        remote_parent = path[-1]
+        for n in path:
+            if len(n.children) >= 2:
+                remote_parent = n
+
+        d_s = 2 * remote_parent.content['p3d'].radius
+        pathLength = self.get_segment_pathlength(node)
+
+        burke_taper = (d_e - d_s) / pathLength
+
+        return burke_taper
+
+    def tortuosity(self, node):
+        """
+        Calculate the tortuosity of the path ending at the node.
+        A path is defined as a stretch between
+        the soma and a bifurcation point, between bifurcation points,
+        or in between of a bifurcation point and a terminal point
+
+        tortuosity = (Euclidean distance between the ends of the path) / (path length of the path)
+
+        Parameters
+        ---------
+        node : :class:`btmorph.btstructs2.SNode2`
+            Node of interest
+        Returns
+        ---------
+        list
+            List of burke tapers, each corresponding to one child
+        """
+        assert node in self._end_points + self._bif_points, \
+            'Tortuosity can only be calculated for an end point or at a bifurcation'
+
+        return self.get_segment_Euclidean_length(node) / self.get_pathlength_to_root(node)
 
     def get_boundingbox(self):
         '''
