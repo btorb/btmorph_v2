@@ -648,7 +648,7 @@ class NeuronMorphology(object):
         dz : float
             z-dimension
         """
-        dx, dy, dz = self.total_dimensions_verbose()
+        dx, dy, dz, maxs = self.total_dimensions_verbose()
         return dx, dy, dz
 
     def total_dimensions_verbose(self):
