@@ -487,7 +487,7 @@ class NeuronMorphology(object):
                                             # avoid the two side branches
                     end_points.append(node)
             if node.parent is None:
-                soma_points = node
+                soma_points = [node]
 
         return soma_points, bif_points, end_points
 
