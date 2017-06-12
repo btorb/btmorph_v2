@@ -171,10 +171,12 @@ class VoxelGrid(object) :
         """
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
-        keys = list(this.grid.keys());
-        xs = [x_y_z[0] for x_y_z in keys]
-        ys = [x_y_z1[1] for x_y_z1 in keys]
-        zs = [x_y_z2[2] for x_y_z2 in keys]
+        keys = this.grid.keys();
+        xs, ys, zs = [], [], []
+        for coords in keys:
+            xs.append(coords[0])
+            ys.append(coords[1])
+            zs.append(coords[2])
         ax.scatter(xs, ys, zs, zdir="z")
     
     def calc_encompassing_box_sphere(self, center, radius):
