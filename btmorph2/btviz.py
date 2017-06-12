@@ -7,7 +7,6 @@ B. Torben-Nielsen
 """
 import sys,time
 from matplotlib.cm import get_cmap
-from Crypto.Protocol.AllOrNothing import isInt
 sys.setrecursionlimit(10000)
 
 import numpy as np
@@ -49,16 +48,16 @@ def plot_2D(neuron, color_scheme="default", color_mapping=None,
         Default is None. If present, this is a list[N] of colors
         where N is the number of compartments, which roughly corresponds to the
         number of lines in the SWC file. If in format of list[float], this list
-        is normalized and mapped to the jet color map, if in format of 
-        list[list[float,float,float,float]], the 4 floats represt R,G,B,A 
+        is normalized and mapped to the jet color map, if in format of
+        list[list[float,float,float,float]], the 4 floats represt R,G,B,A
         respectively and must be between 0-255. When not None, this argument
         overrides the color_scheme argument(Note the difference with segments).
     synapses : vector of bools
-        Default is None. If present, draw a circle or dot in a distinct color 
-        at the location of the corresponding compartment. This is a 
+        Default is None. If present, draw a circle or dot in a distinct color
+        at the location of the corresponding compartment. This is a
         1xN vector.
     save_image: string
-        Default is None. If present, should be in format "file_name" without 
+        Default is None. If present, should be in format "file_name" without
         an extension, and an animation will be saved as this filename.
     depth : string
         Default 'y' means that X represents the superficial to deep axis. \
@@ -77,11 +76,11 @@ def plot_2D(neuron, color_scheme="default", color_mapping=None,
         my_color_list = config.c_scheme_default['neurite']
     elif color_scheme == 'neuromorpho':
         my_color_list = config.c_scheme_nm['neurite']
-    print 'my_color_list: ', my_color_list
-    
+    print('my_color_list: ', my_color_list)
+
     scalarMap = None
     # setting up for a colormap
-    
+
     if color_mapping is not None:
         if isinstance(color_mapping[0], int):
             jet = plt.get_cmap('jet')
@@ -117,13 +116,13 @@ def plot_2D(neuron, color_scheme="default", color_mapping=None,
             if color_mapping is None:
                 pl = plt.plot([P.content['p3d'].xyz[0], C.content['p3d'].xyz[0]], [P.content['p3d'].xyz[ax],C.content['p3d'].xyz[ax]], my_color_list[C.content['p3d'].segtype-1], linewidth=line_width, zorder=1)
             else:
-    
+
                 if isinstance(color_mapping[0], int):
                     c = scalarMap.to_rgba(color_mapping[index])
                 elif isinstance(color_mapping[0], list):
                     c = [float(x) / 255 for x in color_mapping[index]]
                 pl = plt.plot([P.content['p3d'].xyz[0], C.content['p3d'].xyz[0]], [P.content['p3d'].xyz[ax], C.content['p3d'].xyz[ax]], c=c , linewidth=line_width, zorder=1)
-    
+
             # add the synapses
             if synapses is not None:
                 if synapses[index]:
@@ -134,9 +133,9 @@ def plot_2D(neuron, color_scheme="default", color_mapping=None,
         index += 1
         # TODO: insert synapses here
     plt.xlabel("X")
-    if ax is 1: 
+    if ax is 1:
         plt.ylabel("Y")
-    else: 
+    else:
         plt.ylabel("Z")
 
     plt.tight_layout()
@@ -147,7 +146,7 @@ def plot_2D(neuron, color_scheme="default", color_mapping=None,
         if isinstance(color_mapping[0], int):
             cb = plt.colorbar(CS3) # bit of a workaround, but it seems to work
             ticks_f = np.linspace(np.min(color_mapping)-1,np.max(color_mapping)+1,5 )
-            ticks_i = map(int,ticks_f)
+            ticks_i = list(map(int,ticks_f))
             cb.set_ticks(ticks_i)
 
     # set the bg color
@@ -158,7 +157,7 @@ def plot_2D(neuron, color_scheme="default", color_mapping=None,
     elif color_scheme == 'neuromorpho':
         ax.set_axis_bgcolor(config.c_scheme_nm['bg'])
 
-    
+
     if save_image is not None:
         plt.savefig(save_image)
     plt.show()
@@ -178,13 +177,13 @@ def plot_3D(neuron, color_scheme="default", color_mapping=None,
         Default is None. If present, this is a list[N] of colors
         where N is the number of compartments, which roughly corresponds to the
         number of lines in the SWC file. If in format of list[float], this list
-        is normalized and mapped to the jet color map, if in format of 
-        list[list[float,float,float,float]], the 4 floats represt R,G,B,A 
+        is normalized and mapped to the jet color map, if in format of
+        list[list[float,float,float,float]], the 4 floats represt R,G,B,A
         respectively and must be between 0-255. When not None, this argument
         overrides the color_scheme argument(Note the difference with segments).
     synapses : vector of bools
-        Default is None. If present, draw a circle or dot in a distinct color 
-        at the location of the corresponding compartment. This is a 
+        Default is None. If present, draw a circle or dot in a distinct color
+        at the location of the corresponding compartment. This is a
         1xN vector.
     save_image: string
         Default is None. If present, should be in format "file_name.extension",
@@ -196,14 +195,14 @@ def plot_3D(neuron, color_scheme="default", color_mapping=None,
 
     if show_radius==False:
         plot_radius = config.fake_radius
-    
+
     if color_scheme == 'default':
         my_color_list = config.c_scheme_default['neurite']
     elif color_scheme == 'neuromorpho':
         my_color_list = config.c_scheme_nm['neurite']
     else:
         raise Exception("Not valid color scheme")
-    print 'my_color_list: ', my_color_list
+    print('my_color_list: ', my_color_list)
 
     fig, ax = plt.subplots()
 
@@ -242,7 +241,7 @@ def plot_3D(neuron, color_scheme="default", color_mapping=None,
                 line_width = plot_radius
             else:
                 line_width = c_r/2.0
-            
+
             if color_mapping is None:
                 ax.plot([p_x, c_x], [p_y, c_y], [p_z, c_z], my_color_list[node.content['p3d'].segtype - 1], linewidth=line_width)
             else:
@@ -274,7 +273,7 @@ def plot_3D(neuron, color_scheme="default", color_mapping=None,
         if isinstance(color_mapping[0], int):
             cb = plt.colorbar(CS3) # bit of a workaround, but it seems to work
             ticks_f = np.linspace(np.min(color_mapping)-1, np.max(color_mapping)+1, 5)
-            ticks_i = map(int, ticks_f)
+            ticks_i = list(map(int, ticks_f))
             cb.set_ticks(ticks_i)
 
     # set the bg color
@@ -306,13 +305,13 @@ def animate(neuron, color_scheme="default", color_mapping=None,
         Default is None. If present, this is a list[N] of colors
         where N is the number of compartments, which roughly corresponds to the
         number of lines in the SWC file. If in format of list[float], this list
-        is normalized and mapped to the jet color map, if in format of 
-        list[list[float,float,float,float]], the 4 floats represt R,G,B,A 
+        is normalized and mapped to the jet color map, if in format of
+        list[list[float,float,float,float]], the 4 floats represt R,G,B,A
         respectively and must be between 0-255. When not None, this argument
         overrides the color_scheme argument(Note the difference with segments).
     synapses : vector of bools
-        Default is None. If present, draw a circle or dot in a distinct color 
-        at the location of the corresponding compartment. This is a 
+        Default is None. If present, draw a circle or dot in a distinct color
+        at the location of the corresponding compartment. This is a
         1xN vector.
     save_image: string
         Default is None. If present, should be in format "file_name.extension",
@@ -326,7 +325,7 @@ def animate(neuron, color_scheme="default", color_mapping=None,
         my_color_list = config.c_scheme_nm['neurite']
     else:
         raise Exception("Not valid color scheme")
-    print 'my_color_list: ', my_color_list
+    print('my_color_list: ', my_color_list)
 
     fig, ax = plt.subplots()
 
@@ -392,7 +391,7 @@ def animate(neuron, color_scheme="default", color_mapping=None,
         if isinstance(color_mapping[0], int):
             cb = plt.colorbar(CS3) # bit of a workaround, but it seems to work
             ticks_f = np.linspace(np.min(color_mapping)-1, np.max(color_mapping)+1, 5)
-            ticks_i = map(int, ticks_f)
+            ticks_i = list(map(int, ticks_f))
             cb.set_ticks(ticks_i)
 
     # set the bg color
@@ -407,7 +406,7 @@ def animate(neuron, color_scheme="default", color_mapping=None,
     anim.save(save_image + ".gif", writer='imagemagick', fps=4)
 
     # anim.save(save_image + ".gif", writer='ffmpeg', fps=4)
-    
+
 
     return fig
 
@@ -436,7 +435,7 @@ def plot_3D_Forest(neurons, color_scheme="default", save_image=None):
         my_color_list = config.c_scheme_nm['neurite']
     else:
         raise Exception("Not valid color scheme")
-    print 'my_color_list: ', my_color_list
+    print('my_color_list: ', my_color_list)
 
     fig, ax = plt.subplots()
 
@@ -498,7 +497,7 @@ def plot_dendrogram(neuron,transform='plain',shift=0,c='k',radius=True,rm=20000.
         File name of the output file. Extension of this file sets the file type
     """
     global C, RM, RA, max_width, max_height # n.a.s.t.y.
-    
+
     swc_tree = neuron.tree
     RM = rm
     RA = ra
@@ -506,16 +505,16 @@ def plot_dendrogram(neuron,transform='plain',shift=0,c='k',radius=True,rm=20000.
     max_height = 0
     max_width = 0
     plt.clf()
-    print 'Going to build the dendrogram. This might take a while...'
+    print('Going to build the dendrogram. This might take a while...')
     ttt = time.time()
     _expand_dendrogram(swc_tree.root,swc_tree,shift,0,radius=radius,transform=transform)
     if(transform == 'plain') :
         plt.ylabel('L (micron)')
     elif(transform == 'lambda') :
         plt.ylabel('L (lambda)')
-    print (time.time() - ttt), ' later the dendrogram was finished. '
+    print((time.time() - ttt), ' later the dendrogram was finished. ')
 
-    print 'max_widht=%f, max_height=%f' % (max_width,max_height)
+    print('max_widht=%f, max_height=%f' % (max_width,max_height))
     x_bound = (max_width / 2.0) + (0.1*max_width)
     max_y_bound = max_height + 0.1*max_height
     plt.axis([-1.0*x_bound,x_bound,-0.1*max_height,max_y_bound])
@@ -525,7 +524,7 @@ def plot_dendrogram(neuron,transform='plain',shift=0,c='k',radius=True,rm=20000.
     frame1 = plt.gca()
     frame1.axes.get_xaxis().set_visible(False)
     frame1.axes.get_yaxis().set_visible(False)
-    
+
     if(outN != None) :
         plt.savefig(outN)
 
@@ -540,12 +539,12 @@ def _expand_dendrogram(cNode,swc_tree,off_x,off_y,radius,transform='plain') :
     start_x = off_x-(required_h_space/2.0)
     if(required_h_space > max_width) :
         max_width = required_h_space
-    
+
     if swc_tree.is_root(cNode) :
-        print 'i am expanding the root'
+        print('i am expanding the root')
         cNode.children.remove(swc_tree.get_node_with_index(2))
         cNode.children.remove(swc_tree.get_node_with_index(3))
-    
+
     for cChild in cNode.children :
         l = _path_between(swc_tree,cChild,cNode,transform=transform)
         r = cChild.content['p3d'].radius
@@ -574,11 +573,11 @@ def _path_between(swc_tree,deep,high,transform='plain') :
         #pl += np.sqrt( (pPos.x - cPos.x)**2 + (pPos.y - cPos.y)**2 + (pPos.z - cPos.z)**2 )
         pNode = node
         if(node == high) : break
-        
+
     if(transform == 'plain'):
         return pl
     elif(transform == 'lambda') :
         DIAM = (deep.content['p3d'].radius*2.0 + high.content['p3d'].radius*2.0) /2.0 # naive...
         c_lambda = np.sqrt(1e+4*(DIAM/4.0)*(RM/RA))
         return pl / c_lambda
-        
+

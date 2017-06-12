@@ -20,7 +20,7 @@ from btmorph2.btviz import plot_3D
 from btmorph2.btviz import animate
 from btmorph2.btviz import plot_dendrogram
 from numpy import mean, cov, dot, linalg, transpose
-from __builtin__ import str
+from builtins import str
 
 
 class PopulationMorphology(object):
@@ -71,7 +71,7 @@ class PopulationMorphology(object):
                         self.add_neuron(n)
 
         except:
-            print "Object is not valid type"
+            print("Object is not valid type")
 
     def add_neuron(self, neuron):
         self.neurons.append(neuron)
@@ -671,12 +671,12 @@ class NeuronMorphology(object):
             minX,maxX,minY,maxY,minZ,maxZ
 
         """
-        minX = sys.maxint
-        maxX = -1 * sys.maxint
-        minY = sys.maxint
-        maxY = -1 * sys.maxint
-        minZ = sys.maxint
-        maxZ = -1 * sys.maxint
+        minX = sys.maxsize
+        maxX = -1 * sys.maxsize
+        minY = sys.maxsize
+        maxY = -1 * sys.maxsize
+        minZ = sys.maxsize
+        maxZ = -1 * sys.maxsize
         for Node in self._all_nodes:
             n = Node.content['p3d']
             nx = n.xyz[0]
@@ -1157,7 +1157,7 @@ class NeuronMorphology(object):
         if len(node.children) == 0:
             return 1
         # Not leaf
-        childrenHS = map(self.local_horton_strahler, node.children)
+        childrenHS = list(map(self.local_horton_strahler, node.children))
         return max(childrenHS + [(min(childrenHS)+1)])
 
     def get_boundingbox(self):
@@ -1643,7 +1643,7 @@ class Tree(object):
         if from_node.parent is not None:
             self._go_up_from_until(from_node.parent, to_node, n)
 
-    def read_SWC_tree_from_file(self, input_file, types=range(1, 10)):
+    def read_SWC_tree_from_file(self, input_file, types=list(range(1, 10))):
 
         """
         Non-specific for a "tree data structure"
@@ -1667,8 +1667,8 @@ class Tree(object):
         # check soma-representation: 3-point soma or a non-standard
         # representation
         self.soma_type = self._determine_soma_type(input_file)
-        print "NeuronMorphology::read_SWC_tree_from_file found soma_type=%i" \
-            % self.soma_type
+        print("NeuronMorphology::read_SWC_tree_from_file found soma_type=%i" \
+            % self.soma_type)
 
         f = open(input_file, 'r')
         all_nodes = dict()
@@ -1702,7 +1702,7 @@ class Tree(object):
 
         # IF 1-point soma representation
         if self.soma_type == 0:
-            for index, (swc_type, node, parent_index) in all_nodes.items():
+            for index, (swc_type, node, parent_index) in list(all_nodes.items()):
                 if index == 1:
                     # print "Set soma -- 1-point soma"
                     self.root = node
@@ -1737,7 +1737,7 @@ class Tree(object):
 
         # IF 3-point soma representation
         if self.soma_type == 1:
-            for index, (swc_type, node, parent_index) in all_nodes.items():
+            for index, (swc_type, node, parent_index) in list(all_nodes.items()):
                 if index == 1:
                     # print "Set soma -- 3 point soma"
                     self.root = node
@@ -1755,7 +1755,7 @@ class Tree(object):
             # get all some info
             soma_cylinders = []
             connected_to_root = []
-            for index, (swc_type, node, parent_index) in all_nodes.items():
+            for index, (swc_type, node, parent_index) in list(all_nodes.items()):
                 if swc_type == 1 and not index == 1:
                     soma_cylinders.append((node, parent_index))
                     if index > 1:
@@ -1772,7 +1772,7 @@ class Tree(object):
             self.add_node_with_parent(s_node_2, self.root)
 
             # add the other points
-            for index, (swc_type, node, parent_index) in all_nodes.items():
+            for index, (swc_type, node, parent_index) in list(all_nodes.items()):
                 if swc_type == 1:
                     pass
                 else:
@@ -1848,8 +1848,8 @@ class Tree(object):
             # print "(node %i) surf as cylinder:  %f (R=%f, H=%f), P=%s" %
             # (node.index,surf,n.radius,H,p)
             total_surf = total_surf+surf
-        print "found 'multiple cylinder soma' w/ total soma surface=", \
-            total_surf
+        print("found 'multiple cylinder soma' w/ total soma surface=", \
+            total_surf)
 
         # define appropriate radius
         radius = np.sqrt(total_surf / (4 * np.pi))
@@ -1947,7 +1947,7 @@ class Tree(object):
         """
         nodes = self.get_nodes()
         N = len(nodes)
-        coords = map(lambda n: n.content['p3d'].xyz, nodes)
+        coords = [n.content['p3d'].xyz for n in nodes]
         points = transpose(coords)
         _, score, _ = self._pca(points.T)
         if threeD is False:
