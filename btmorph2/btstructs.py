@@ -1241,7 +1241,7 @@ class NeuronMorphology(object):
         if len(node.children) == 0:
             return 1
         # Not leaf
-        childrenHS = map(self.local_horton_strahler, node.children)
+        childrenHS = list(map(self.local_horton_strahler, node.children))
         return max(childrenHS + [(min(childrenHS) + 1)])
 
     def Burke_taper(self, node):
