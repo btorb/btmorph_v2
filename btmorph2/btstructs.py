@@ -20,7 +20,6 @@ from btmorph2.btviz import plot_3D
 from btmorph2.btviz import animate
 from btmorph2.btviz import plot_dendrogram
 from numpy import mean, cov, dot, linalg, transpose
-from builtins import str
 
 
 class PopulationMorphology(object):
@@ -487,7 +486,7 @@ class NeuronMorphology(object):
                                             # avoid the two side branches
                     end_points.append(node)
             if node.parent is None:
-                soma_points = node
+                soma_points = [node]
 
         return soma_points, bif_points, end_points
 
@@ -648,7 +647,7 @@ class NeuronMorphology(object):
         dz : float
             z-dimension
         """
-        dx, dy, dz = self.total_dimensions_verbose()
+        dx, dy, dz, maxs = self.total_dimensions_verbose()
         return dx, dy, dz
 
     def total_dimensions_verbose(self):
@@ -657,7 +656,6 @@ class NeuronMorphology(object):
 
         Overall dimension of the whole moprhology. (No translation of the \
         moprhology according to arbitrary axes.)
-
 
         Returns
         -------
@@ -668,15 +666,16 @@ class NeuronMorphology(object):
         dz : float
             z-dimension
         data : list
-            minX,maxX,minY,maxY,minZ,maxZ
-
+            minX, maxX, minY, maxY, minZ, maxZ
         """
-        minX = sys.maxsize
-        maxX = -1 * sys.maxsize
-        minY = sys.maxsize
-        maxY = -1 * sys.maxsize
-        minZ = sys.maxsize
-        maxZ = -1 * sys.maxsize
+        # comparisons (preset max and min; minint is -maxint - 1, as mentioned
+        # here: https://docs.python.org/2/library/sys.html)
+        minX = sys.maxint
+        maxX = -sys.maxint - 1
+        minY = sys.maxint
+        maxY = -sys.maxint - 1
+        minZ = sys.maxint
+        maxZ = -sys.maxint - 1
         for Node in self._all_nodes:
             n = Node.content['p3d']
             nx = n.xyz[0]
@@ -700,14 +699,105 @@ class NeuronMorphology(object):
         Calculate Horton-Strahler number at the root
         See :func:`local_horton_strahler`
 
-        Parameters
-        ---------
-
         Returns
         ---------
         Horton-Strahler number at the root
         """
         return self.local_horton_strahler(self.__tree.root)
+
+    def max_EucDistance_from_root(self):
+
+        """
+        Returns the Euclidean distance of the node which has the maximum
+        Euclidean distance from the root.
+        """
+        return max(map(self.get_Euclidean_length_to_root, self._end_points))
+
+    def max_pathLength_from_root(self):
+
+        """
+        Returns the path length of the node which has the maximum path length
+        from the root.
+        """
+        return max(map(self.get_pathlength_to_root, self._end_points))
+
+    def max_centrifugal_order(self):
+        """
+        Returns the maximum of the centrifugal orders of all nodes in the tree.
+        """
+        return max(map(self.order_of_node, self._end_points))
+
+    def max_bif_angle(self):
+        """
+        Returns the maximum of the bifurcation angles of all bifurcation nodes
+        in the tree.
+        """
+        if len(self._bif_points):
+            return max(map(self.bifurcation_angle_vec, self._bif_points))
+        else:
+            return float('nan')
+
+    def avg_bif_angle(self):
+        """
+        Returns the average of the bifurcation angles of all bifurcation nodes
+        in the tree.
+        """
+        if len(self._bif_points):
+            return float(np.mean(map(self.bifurcation_angle_vec, self._bif_points)))
+        else:
+            return float('nan')
+
+    def avg_partition_asymmetry(self):
+        """
+        Returns the average of the partition assymetries of all bifurcation
+        nodes in the tree.
+        """
+        if len(self._bif_points):
+            return float(np.mean(map(self.partition_asymmetry, self._bif_points)))
+        else:
+            return float('nan')
+
+    def avg_diameter(self):
+        """
+        Returns the average of the diameters of all nodes in the tree.
+        """
+        return float(np.mean(self.get_diameters()))
+
+    def avg_Burke_taper(self):
+        """
+        Calculate the average Burke taper of all paths in the tree.
+        A path is defined as a stretch between
+        the soma and a bifurcation point, between bifurcation points,
+        or in between of a bifurcation point and a terminal point
+
+        Returns
+        -------
+        (average_Burke_taper, all_Burke_tapers): (float, list)
+            A tuple of the average Burke taper for the tree and a list of Burke
+            tapers of all paths of the tree.
+        """
+
+        burkeTapers = map(self.Burke_taper, self._end_points + self._bif_points)
+
+        return float(np.mean(burkeTapers)), burkeTapers
+
+    def avg_tortuosity(self):
+        """
+        Calculate the average tortuosity of all paths in the tree.
+        A path is defined as a stretch between
+        the soma and a bifurcation point, between bifurcation points,
+        or in between of a bifurcation point and a terminal point
+
+        Returns
+        -------
+        (average_tortuosity, all_Burke_tapers): (float, list)
+            A tuple of the average tortuosity for all paths in the tree and a
+            list of Burke tapers of all paths in the tree.
+        """
+
+        totuosities = map(self.tortuosity, self._end_points + self._bif_points)
+
+        return float(np.mean(totuosities)), totuosities
 
     """
     Local measures
@@ -742,7 +832,6 @@ class NeuronMorphology(object):
         -------
         length : float
             length of the incoming path in micron
-
         """
         # updated 2014-01-21 for compatibility with new btstructs2
         L = 0
@@ -780,7 +869,6 @@ class NeuronMorphology(object):
         -------
         length : float
             length of the path between the soma and the provided Node
-
         """
 
         L = 0
@@ -816,7 +904,6 @@ class NeuronMorphology(object):
         length : float
             Euclidean distance *to* provided Node (from soma or first branch
              point with lower order)
-
         """
         L = 0
         if self.__tree.is_leaf(to_node):
@@ -868,7 +955,6 @@ class NeuronMorphology(object):
         Returns
         -------
         degree : float
-
         """
         return self.tree.degree_of_node(node)
 
@@ -885,7 +971,6 @@ class NeuronMorphology(object):
         -------
         order : float
             order of the subneuron rooted at Node
-
         """
         return self.__tree.order_of_node(node)
 
@@ -904,7 +989,6 @@ class NeuronMorphology(object):
         partition_asymmetry : float
             partition asymmetry of the subneuron rooted at Node
             (according to vanpelt and schierwagen 199x)
-
         """
         if node.children is None or len(node.children) == 1:
             return None
@@ -1157,8 +1241,84 @@ class NeuronMorphology(object):
         if len(node.children) == 0:
             return 1
         # Not leaf
-        childrenHS = list(map(self.local_horton_strahler, node.children))
-        return max(childrenHS + [(min(childrenHS)+1)])
+        childrenHS = map(self.local_horton_strahler, node.children)
+        return max(childrenHS + [(min(childrenHS) + 1)])
+
+    def Burke_taper(self, node):
+        """
+        Calculate burke tapers of the path ending at the given node.
+        A path is defined as a stretch between
+        the soma and a bifurcation point, between bifurcation points,
+        or between a bifurcation point and a terminal point
+
+        Burke taper = (d_e - d_s) / l
+        where d_e and d_s are the diameters at the end and start, respectively,
+        of a path.
+
+
+        Ref: Burke, R E, W B Marks, and B Ulfhake.
+        "A Parsimonious Description of Motoneuron Dendritic Morphology Using
+        Computer Simulation."
+        The Journal of neuroscience (1992)
+
+        Parameters
+        ---------
+        node : :class:`btmorph.btstructs2.SNode2`
+            Node of interest
+
+        Returns
+        -------
+        List of burke tapers, each corresponding to one child
+        """
+        assert node in self._end_points + self._bif_points, \
+            'Burke Taper can only be calculated for the end_point or a ' +\
+            'bifurcation.'
+
+        d_e = 2 * node.content['p3d'].radius
+
+
+        if self.__tree.is_leaf(node):
+            path = self.__tree.path_to_root(node)
+        else:
+            path = self.__tree.path_to_root(node)[1:]
+
+        remote_parent = path[-1]
+        for n in path:
+            if len(n.children) >= 2:
+                remote_parent = n
+
+        d_s = 2 * remote_parent.content['p3d'].radius
+        pathLength = self.get_segment_pathlength(node)
+
+        burke_taper = (d_e - d_s) / pathLength
+
+        return burke_taper
+
+    def tortuosity(self, node):
+        """
+        Calculate the tortuosity of the path ending at the node.
+        A path is defined as a stretch between
+        the soma and a bifurcation point, between bifurcation points,
+        or in between of a bifurcation point and a terminal point
+
+        tortuosity = (Euclidean distance between the ends of the path) /
+        (path length of the path)
+
+        Parameters
+        ---------
+        node : :class:`btmorph.btstructs2.SNode2`
+            Node of interest
+
+        Returns
+        -------
+        List of burke tapers, each corresponding to one child
+        """
+        assert node in self._end_points + self._bif_points, \
+            'Tortuosity can only be calculated for an end point or at a ' +\
+            'bifurcation.'
+
+        return self.get_segment_Euclidean_length(node) \
+               / self.get_pathlength_to_root(node)
 
     def get_boundingbox(self):
         '''
@@ -1643,7 +1803,7 @@ class Tree(object):
         if from_node.parent is not None:
             self._go_up_from_until(from_node.parent, to_node, n)
 
-    def read_SWC_tree_from_file(self, input_file, types=list(range(1, 10))):
+    def read_SWC_tree_from_file(self, input_file, types=range(1, 10)):
 
         """
         Non-specific for a "tree data structure"
@@ -1702,7 +1862,7 @@ class Tree(object):
 
         # IF 1-point soma representation
         if self.soma_type == 0:
-            for index, (swc_type, node, parent_index) in list(all_nodes.items()):
+            for index, (swc_type, node, parent_index) in all_nodes.items():
                 if index == 1:
                     # print "Set soma -- 1-point soma"
                     self.root = node
@@ -1737,7 +1897,7 @@ class Tree(object):
 
         # IF 3-point soma representation
         if self.soma_type == 1:
-            for index, (swc_type, node, parent_index) in list(all_nodes.items()):
+            for index, (swc_type, node, parent_index) in all_nodes.items():
                 if index == 1:
                     # print "Set soma -- 3 point soma"
                     self.root = node
@@ -1755,7 +1915,7 @@ class Tree(object):
             # get all some info
             soma_cylinders = []
             connected_to_root = []
-            for index, (swc_type, node, parent_index) in list(all_nodes.items()):
+            for index, (swc_type, node, parent_index) in all_nodes.items():
                 if swc_type == 1 and not index == 1:
                     soma_cylinders.append((node, parent_index))
                     if index > 1:
@@ -1772,7 +1932,7 @@ class Tree(object):
             self.add_node_with_parent(s_node_2, self.root)
 
             # add the other points
-            for index, (swc_type, node, parent_index) in list(all_nodes.items()):
+            for index, (swc_type, node, parent_index) in all_nodes.items():
                 if swc_type == 1:
                     pass
                 else:
@@ -1947,7 +2107,7 @@ class Tree(object):
         """
         nodes = self.get_nodes()
         N = len(nodes)
-        coords = [n.content['p3d'].xyz for n in nodes]
+        coords = map(lambda n: n.content['p3d'].xyz, nodes)
         points = transpose(coords)
         _, score, _ = self._pca(points.T)
         if threeD is False:
