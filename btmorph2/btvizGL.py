@@ -803,8 +803,8 @@ class modelbuilder:
         return self.root, self.vertices_gl, self.colors_gl, self.Neuron
 
     def LoadLineObject(self, neuron):
-        from btstructs import NeuronMorphology
-        from btstructs import ForestStructure
+        from .btstructs import NeuronMorphology
+        from .btstructs import ForestStructure
 
         if isinstance(neuron, NeuronMorphology):
             result = self.LoadLineNeuron(neuron)
@@ -829,8 +829,8 @@ class modelbuilder:
             self.colors_gl = numpy.array.vbo.VBO(colors)
 
     def LoadPolyObject(self, neuron, fast=False):
-        from btstructs import NeuronMorphology
-        from btstructs import ForestStructure
+        from .btstructs import NeuronMorphology
+        from .btstructs import ForestStructure
 
         if isinstance(neuron, NeuronMorphology):
             self.Neuron = GL.glGenLists(1)
@@ -876,8 +876,8 @@ class modelbuilder:
                              self.scalefactor)
             if index <= 3:
                 index += 1
-                print 'do not draw the soma and its CNG,\
-                       !!! 2 !!! point descriptions'
+                print('do not draw the soma and its CNG,\
+                       !!! 2 !!! point descriptions')
             else:
                 parent = node.parent
                 p_x = self.scale(parent.content['p3d'].xyz[0] + offset[0],
@@ -886,7 +886,7 @@ class modelbuilder:
                                  self.scalefactor)
                 p_z = self.scale(parent.content['p3d'].xyz[1] + offset[1],
                                  self.scalefactor)
-                print 'index:', index
+                print('index:', index)
 
                 vertices.append([p_x, p_z, p_y])
                 vertices.append([c_x, c_z, c_y])
@@ -898,7 +898,7 @@ class modelbuilder:
             n.array(colors, dtype=n.float32)
 
     def LoadPolyNeuron(self, neuron, index=0, fast=False):
-        from btstructs import NeuronMorphology
+        from .btstructs import NeuronMorphology
 
         offset = [0, 0, 0]
         my_color_list = [[1.0, 0.0, 0.0],

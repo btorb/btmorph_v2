@@ -20,7 +20,6 @@ from btmorph2.btviz import plot_3D
 from btmorph2.btviz import animate
 from btmorph2.btviz import plot_dendrogram
 from numpy import mean, cov, dot, linalg, transpose
-from __builtin__ import str
 
 
 class PopulationMorphology(object):
@@ -71,7 +70,7 @@ class PopulationMorphology(object):
                         self.add_neuron(n)
 
         except:
-            print "Object is not valid type"
+            print("Object is not valid type")
 
     def add_neuron(self, neuron):
         self.neurons.append(neuron)
@@ -658,7 +657,6 @@ class NeuronMorphology(object):
         Overall dimension of the whole moprhology. (No translation of the \
         moprhology according to arbitrary axes.)
 
-
         Returns
         -------
         dx : float
@@ -668,15 +666,16 @@ class NeuronMorphology(object):
         dz : float
             z-dimension
         data : list
-            minX,maxX,minY,maxY,minZ,maxZ
-
+            minX, maxX, minY, maxY, minZ, maxZ
         """
+        # comparisons (preset max and min; minint is -maxint - 1, as mentioned
+        # here: https://docs.python.org/2/library/sys.html)
         minX = sys.maxint
-        maxX = -1 * sys.maxint
+        maxX = -sys.maxint - 1
         minY = sys.maxint
-        maxY = -1 * sys.maxint
+        maxY = -sys.maxint - 1
         minZ = sys.maxint
-        maxZ = -1 * sys.maxint
+        maxZ = -sys.maxint - 1
         for Node in self._all_nodes:
             n = Node.content['p3d']
             nx = n.xyz[0]
@@ -700,9 +699,6 @@ class NeuronMorphology(object):
         Calculate Horton-Strahler number at the root
         See :func:`local_horton_strahler`
 
-        Parameters
-        ---------
-
         Returns
         ---------
         Horton-Strahler number at the root
@@ -712,67 +708,29 @@ class NeuronMorphology(object):
     def max_EucDistance_from_root(self):
 
         """
-        Returns the Euclidean distance of the node which has the maximum Euclidean distance from the root.
-
-
-        Parameters
-        ---------
-
-        Returns
-        ---------
-        float
-
+        Returns the Euclidean distance of the node which has the maximum
+        Euclidean distance from the root.
         """
-
         return max(map(self.get_Euclidean_length_to_root, self._end_points))
 
     def max_pathLength_from_root(self):
 
         """
-        Returns the path length of the node which has the maximum path length from the root.
-
-
-        Parameters
-        ---------
-
-        Returns
-        ---------
-        float
-
+        Returns the path length of the node which has the maximum path length
+        from the root.
         """
-
         return max(map(self.get_pathlength_to_root, self._end_points))
 
     def max_centrifugal_order(self):
-
         """
         Returns the maximum of the centrifugal orders of all nodes in the tree.
-
-
-        Parameters
-        ---------
-
-        Returns
-        ---------
-        float
-
         """
-
         return max(map(self.order_of_node, self._end_points))
 
     def max_bif_angle(self):
-
         """
-        Returns the maximum of the bifurcation angles of all bifurcation nodes in the tree.
-
-
-        Parameters
-        ---------
-
-        Returns
-        ---------
-        float
-
+        Returns the maximum of the bifurcation angles of all bifurcation nodes
+        in the tree.
         """
         if len(self._bif_points):
             return max(map(self.bifurcation_angle_vec, self._bif_points))
@@ -780,18 +738,9 @@ class NeuronMorphology(object):
             return float('nan')
 
     def avg_bif_angle(self):
-
         """
-        Returns the average of the bifurcation angles of all bifurcation nodes in the tree.
-
-
-        Parameters
-        ---------
-
-        Returns
-        ---------
-        float
-
+        Returns the average of the bifurcation angles of all bifurcation nodes
+        in the tree.
         """
         if len(self._bif_points):
             return float(np.mean(map(self.bifurcation_angle_vec, self._bif_points)))
@@ -800,16 +749,8 @@ class NeuronMorphology(object):
 
     def avg_partition_asymmetry(self):
         """
-        Returns the average of the partition assymetries of all bifurcation nodes in the tree.
-
-
-        Parameters
-        ---------
-
-        Returns
-        ---------
-        float
-
+        Returns the average of the partition assymetries of all bifurcation
+        nodes in the tree.
         """
         if len(self._bif_points):
             return float(np.mean(map(self.partition_asymmetry, self._bif_points)))
@@ -819,17 +760,7 @@ class NeuronMorphology(object):
     def avg_diameter(self):
         """
         Returns the average of the diameters of all nodes in the tree.
-
-
-        Parameters
-        ---------
-
-        Returns
-        ---------
-        float
-
         """
-
         return float(np.mean(self.get_diameters()))
 
     def avg_Burke_taper(self):
@@ -839,14 +770,11 @@ class NeuronMorphology(object):
         the soma and a bifurcation point, between bifurcation points,
         or in between of a bifurcation point and a terminal point
 
-        Parameters
-        ---------
-
         Returns
-        ---------
+        -------
         (average_Burke_taper, all_Burke_tapers): (float, list)
-        A tuple of the average Burke taper for the tree and a list of Burke tapers of all paths of the tree.
-
+            A tuple of the average Burke taper for the tree and a list of Burke
+            tapers of all paths of the tree.
         """
 
         burkeTapers = map(self.Burke_taper, self._end_points + self._bif_points)
@@ -860,14 +788,11 @@ class NeuronMorphology(object):
         the soma and a bifurcation point, between bifurcation points,
         or in between of a bifurcation point and a terminal point
 
-        Parameters
-        ---------
-
         Returns
-        ---------
+        -------
         (average_tortuosity, all_Burke_tapers): (float, list)
-        A tuple of the average tortuosity for all paths in the tree and a list of Burke tapers of all paths in the tree.
-
+            A tuple of the average tortuosity for all paths in the tree and a
+            list of Burke tapers of all paths in the tree.
         """
 
         totuosities = map(self.tortuosity, self._end_points + self._bif_points)
@@ -907,7 +832,6 @@ class NeuronMorphology(object):
         -------
         length : float
             length of the incoming path in micron
-
         """
         # updated 2014-01-21 for compatibility with new btstructs2
         L = 0
@@ -945,7 +869,6 @@ class NeuronMorphology(object):
         -------
         length : float
             length of the path between the soma and the provided Node
-
         """
 
         L = 0
@@ -981,7 +904,6 @@ class NeuronMorphology(object):
         length : float
             Euclidean distance *to* provided Node (from soma or first branch
              point with lower order)
-
         """
         L = 0
         if self.__tree.is_leaf(to_node):
@@ -1033,7 +955,6 @@ class NeuronMorphology(object):
         Returns
         -------
         degree : float
-
         """
         return self.tree.degree_of_node(node)
 
@@ -1050,7 +971,6 @@ class NeuronMorphology(object):
         -------
         order : float
             order of the subneuron rooted at Node
-
         """
         return self.__tree.order_of_node(node)
 
@@ -1069,7 +989,6 @@ class NeuronMorphology(object):
         partition_asymmetry : float
             partition asymmetry of the subneuron rooted at Node
             (according to vanpelt and schierwagen 199x)
-
         """
         if node.children is None or len(node.children) == 1:
             return None
@@ -1322,8 +1241,8 @@ class NeuronMorphology(object):
         if len(node.children) == 0:
             return 1
         # Not leaf
-        childrenHS = map(self.local_horton_strahler, node.children)
-        return max(childrenHS + [(min(childrenHS)+1)])
+        childrenHS = list(map(self.local_horton_strahler, node.children))
+        return max(childrenHS + [(min(childrenHS) + 1)])
 
     def Burke_taper(self, node):
         """
@@ -1333,24 +1252,27 @@ class NeuronMorphology(object):
         or between a bifurcation point and a terminal point
 
         Burke taper = (d_e - d_s) / l
-        where d_e and d_s are the diameters at the end and start, respectively, of a path.
+        where d_e and d_s are the diameters at the end and start, respectively,
+        of a path.
 
 
         Ref: Burke, R E, W B Marks, and B Ulfhake.
-        "A Parsimonious Description of Motoneuron Dendritic Morphology Using Computer Simulation."
+        "A Parsimonious Description of Motoneuron Dendritic Morphology Using
+        Computer Simulation."
         The Journal of neuroscience (1992)
 
         Parameters
         ---------
         node : :class:`btmorph.btstructs2.SNode2`
             Node of interest
+
         Returns
-        ---------
-        list
-            List of burke tapers, each corresponding to one child
+        -------
+        List of burke tapers, each corresponding to one child
         """
         assert node in self._end_points + self._bif_points, \
-            'Burke Taper can only be calculated for the end_point or a bifurcation'
+            'Burke Taper can only be calculated for the end_point or a ' +\
+            'bifurcation.'
 
         d_e = 2 * node.content['p3d'].radius
 
@@ -1379,21 +1301,24 @@ class NeuronMorphology(object):
         the soma and a bifurcation point, between bifurcation points,
         or in between of a bifurcation point and a terminal point
 
-        tortuosity = (Euclidean distance between the ends of the path) / (path length of the path)
+        tortuosity = (Euclidean distance between the ends of the path) /
+        (path length of the path)
 
         Parameters
         ---------
         node : :class:`btmorph.btstructs2.SNode2`
             Node of interest
+
         Returns
-        ---------
-        list
-            List of burke tapers, each corresponding to one child
+        -------
+        List of burke tapers, each corresponding to one child
         """
         assert node in self._end_points + self._bif_points, \
-            'Tortuosity can only be calculated for an end point or at a bifurcation'
+            'Tortuosity can only be calculated for an end point or at a ' +\
+            'bifurcation.'
 
-        return self.get_segment_Euclidean_length(node) / self.get_pathlength_to_root(node)
+        return self.get_segment_Euclidean_length(node) \
+               / self.get_pathlength_to_root(node)
 
     def get_boundingbox(self):
         '''
@@ -1902,8 +1827,8 @@ class Tree(object):
         # check soma-representation: 3-point soma or a non-standard
         # representation
         self.soma_type = self._determine_soma_type(input_file)
-        print "NeuronMorphology::read_SWC_tree_from_file found soma_type=%i" \
-            % self.soma_type
+        print("NeuronMorphology::read_SWC_tree_from_file found soma_type=%i" \
+            % self.soma_type)
 
         f = open(input_file, 'r')
         all_nodes = dict()
@@ -2083,8 +2008,8 @@ class Tree(object):
             # print "(node %i) surf as cylinder:  %f (R=%f, H=%f), P=%s" %
             # (node.index,surf,n.radius,H,p)
             total_surf = total_surf+surf
-        print "found 'multiple cylinder soma' w/ total soma surface=", \
-            total_surf
+        print("found 'multiple cylinder soma' w/ total soma surface=", \
+            total_surf)
 
         # define appropriate radius
         radius = np.sqrt(total_surf / (4 * np.pi))
