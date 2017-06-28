@@ -60,7 +60,7 @@ class PopulationMorphology(object):
                     for f in files:
                         n = NeuronMorphology(input_file=join(obj, f))
                         self.add_neuron(n)
-                if isfile(obj):
+                if isfile(obj) and obj.endswith(".swc"):
                     n = NeuronMorphology(input_file=join(obj))
                     self.add_neuron(n)
 
@@ -82,64 +82,64 @@ class PopulationMorphology(object):
         return len(self.neurons)
 
     def no_of_bifurcations(self):
+        result = []
         if self.neurons is not None:
-            result = []
             for n in self.neurons:
                 result.append(n.no_bifurcations())
         return result
 
     def no_terminals(self):
+        result = []
         if self.neurons is not None:
-            result = []
             for n in self.neurons:
                 result.append(n.no_terminals())
         return result
 
     def no_stems(self):
+        result = []
         if self.neurons is not None:
-            result = []
             for n in self.neurons:
                 result.append(n.no_stems())
         return result
 
     def total_length(self):
+        result = []
         if self.neurons is not None:
-            result = []
             for n in self.neurons:
                 result.append(n.total_length())
         return result
 
     def total_surface(self):
+        result = []
         if self.neurons is not None:
-            result = []
             for n in self.neurons:
                 result.append(n.total_surface())
         return result
 
     def total_volume(self):
+        result = []
         if self.neurons is not None:
-            result = []
             for n in self.neurons:
                 result.append(n.total_volume())
         return result
 
     def total_dimensions_verbose(self):
+        result = []
         if self.neurons is not None:
-            result = []
             for n in self.neurons:
                 result.append(n.total_dimensions_verbose())
         return result
 
     def global_horton_strahler(self):
+        result = []
         if self.neurons is not None:
-            result = []
             for n in self.neurons:
                 result.append(n.global_horton_strahler())
         return result
 
     def get_diameters(self):
+        result = []
         if self.neurons is not None:
-            result = []
             for n in self.neurons:
                 result.append(n.get_diameters())
         return result
@@ -476,7 +476,7 @@ class NeuronMorphology(object):
         bif_points = []
         end_points = []
 
-        # updated 2014-01-21 for compatibility with new btstructs2
+        # updated 2014-01-21 for compatibility with new btstructs
         for node in self._all_nodes:
             if len(node.children) > 1:
                 if node.parent is not None:
@@ -573,7 +573,7 @@ class NeuronMorphology(object):
             total length in micron
         """
         L = 0
-        # updated 2014-01-21 for compatibility with new btstructs2
+        # updated 2014-01-21 for compatibility with new btstructs
         for Node in self._all_nodes:
             n = Node.content['p3d']
             if Node.index not in (1, 2, 3):
@@ -598,7 +598,7 @@ class NeuronMorphology(object):
         """
         total_surf = 0
         all_surfs = []
-        # updated 2014-01-21 for compatibility with new btstructs2
+        # updated 2014-01-21 for compatibility with new btstructs
         for Node in self._all_nodes:
             n = Node.content['p3d']
             if Node.index not in (1, 2, 3):
@@ -623,7 +623,7 @@ class NeuronMorphology(object):
         """
         total_vol = 0
         all_vols = []
-        # updated 2014-01-21 for compatibility with new btstructs2
+        # updated 2014-01-21 for compatibility with new btstructs
         for Node in self._all_nodes:
             n = Node.content['p3d']
             if Node.index not in (1, 2, 3):
@@ -670,12 +670,12 @@ class NeuronMorphology(object):
         """
         # comparisons (preset max and min; minint is -maxint - 1, as mentioned
         # here: https://docs.python.org/2/library/sys.html)
-        minX = sys.maxint
-        maxX = -sys.maxint - 1
-        minY = sys.maxint
-        maxY = -sys.maxint - 1
-        minZ = sys.maxint
-        maxZ = -sys.maxint - 1
+        minX = sys.maxsize
+        maxX = -sys.maxsize - 1
+        minY = sys.maxsize
+        maxY = -sys.maxsize - 1
+        minZ = sys.maxsize
+        maxZ = -sys.maxsize - 1
         for Node in self._all_nodes:
             n = Node.content['p3d']
             nx = n.xyz[0]
@@ -825,7 +825,7 @@ class NeuronMorphology(object):
 
         Parameters
         ----------
-        to_node : :class:`btmorph.btstructs2.SNode2`
+        to_node : :class:`btmorph.btstructs.SNode`
            Node *to* which the measurement is taken
 
         Returns
@@ -833,7 +833,7 @@ class NeuronMorphology(object):
         length : float
             length of the incoming path in micron
         """
-        # updated 2014-01-21 for compatibility with new btstructs2
+        # updated 2014-01-21 for compatibility with new btstructs
         L = 0
         if self.__tree.is_leaf(to_node):
             path = self.__tree.path_to_root(to_node)
@@ -863,7 +863,7 @@ class NeuronMorphology(object):
 
         Parameters
         ----------
-        from_node : :class:`btmorph.btstructs2.SNode2`
+        from_node : :class:`btmorph.btstructs.SNode`
 
         Returns
         -------
@@ -897,7 +897,7 @@ class NeuronMorphology(object):
 
         Parameters
         ----------
-        from_node : :class:`btmorph.btstructs2.SNode2`
+        from_node : :class:`btmorph.btstructs.SNode`
 
         Returns
         -------
@@ -926,7 +926,7 @@ class NeuronMorphology(object):
 
         Parameters
         ----------
-        from_node : :class:`btmorph.btstructs2.SNode2`
+        from_node : :class:`btmorph.btstructs.SNode`
 
         Returns
         -------
@@ -950,7 +950,7 @@ class NeuronMorphology(object):
 
         Parameters
         ----------
-        node : :class:`btmorph.btstructs2.SNode2`
+        node : :class:`btmorph.btstructs.SNode`
 
         Returns
         -------
@@ -965,7 +965,7 @@ class NeuronMorphology(object):
 
         Parameters
         ----------
-        node : :class:`btmorph.btstructs2.SNode2`
+        node : :class:`btmorph.btstructs.SNode`
 
         Returns
         -------
@@ -982,7 +982,7 @@ class NeuronMorphology(object):
 
         Parameters
         ----------
-        node : :class:`btmorph.btstructs2.SNode2`
+        node : :class:`btmorph.btstructs.SNode`
 
         Returns
         -------
@@ -1040,7 +1040,7 @@ class NeuronMorphology(object):
 
         Parameters
         ----------
-        Node : :class:`btmorph.btstructs2.SNode2`
+        Node : :class:`btmorph.btstructs.SNode`
         where : string
             Toggle 'local' or 'remote'
 
@@ -1086,7 +1086,7 @@ class NeuronMorphology(object):
 
         Parameters
         ----------
-        node : :class:`btmorph.btstructs2.SNode2`
+        node : :class:`btmorph.btstructs.SNode`
         where : string
             either "local" or "remote". "Local" uses the immediate daughter
             points while "remote" uses the point just before the next
@@ -1130,7 +1130,7 @@ class NeuronMorphology(object):
 
         Parameters
         -----------
-        node : :class:`btmorph.btstructs2.SNode2`
+        node : :class:`btmorph.btstructs.SNode`
         where : string
             either 'local or 'remote'. 'Local' uses the immediate daughter
             points while "remote" uses the point just before the next
@@ -1162,7 +1162,7 @@ class NeuronMorphology(object):
 
         Parameters
         -----------
-        node : :class:`btmorph.btstructs2.SNode2`
+        node : :class:`btmorph.btstructs.SNode`
         where : string
             either 'local or 'remote'. 'Local' uses the immediate daughter
             points while "remote" uses the point just before the next
@@ -1227,7 +1227,7 @@ class NeuronMorphology(object):
 
         Parameters
         ---------
-        node : :class:`btmorph.btstructs2.SNode2`
+        node : :class:`btmorph.btstructs.SNode`
             Node of interest
         Returns
         ---------
@@ -1263,7 +1263,7 @@ class NeuronMorphology(object):
 
         Parameters
         ---------
-        node : :class:`btmorph.btstructs2.SNode2`
+        node : :class:`btmorph.btstructs.SNode`
             Node of interest
 
         Returns
@@ -1306,7 +1306,7 @@ class NeuronMorphology(object):
 
         Parameters
         ---------
-        node : :class:`btmorph.btstructs2.SNode2`
+        node : :class:`btmorph.btstructs.SNode`
             Node of interest
 
         Returns
@@ -1336,9 +1336,9 @@ class NeuronMorphology(object):
         for node in self._all_nodes:
             xyz = node.content['p3d'].xyz
             for i in (0, 1, 2):
-                if(xyz[i] < minv[i]):
+                if xyz[i] < minv[i]:
                     minv[i] = xyz[i]
-                if(xyz[i] > maxv[i]):
+                if xyz[i] > maxv[i]:
                     maxv[i] = xyz[i]
         return minv, maxv
 
@@ -1352,7 +1352,7 @@ class Tree(object):
     this is a generic implementation of a tree structure as a linked list.
     '''
 
-    def __init__(self, input_file=None, axis_config=[0, 1, 2]):
+    def __init__(self, input_file=None, axis_config=(0, 1, 2)):
 
         """
         Default constructor.
@@ -1498,7 +1498,7 @@ class Tree(object):
 
         Parameters
         -----------
-        Node : :class:`Node`
+        node : :class:`Node`
             Node to be removed
         """
         node.parent.remove_child(node)
@@ -1760,7 +1760,7 @@ class Tree(object):
 
         Parameters
         ----------
-        Node : :class:`Node`
+        node : :class:`Node`
             Node at which the path starts
 
         Returns
@@ -2097,12 +2097,12 @@ class Tree(object):
 
         Parameters
         ----------
-        tree : :class:`btmorph.btstructs2.STree2`
+        tree : :class:`btmorph.btstructs.STree2`
         A tree
 
         Returns
         --------
-        tree : :class:`btmorph.btstructs2.STree2`
+        tree : :class:`btmorph.btstructs.STree2`
             New flattened tree
         """
         nodes = self.get_nodes()

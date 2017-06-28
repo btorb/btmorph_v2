@@ -1,7 +1,7 @@
 """
 Basic visualization of neurite morphologies using matplotlib.
 
-Usage is restricted to morphologies in the sWC format with the three-point soma `standard <http://neuromorpho.org/neuroMorpho/SomaFormat.html>`_
+Usage is restricted to morphologies in the SWC format with the three-point soma `standard <http://neuromorpho.org/neuroMorpho/SomaFormat.html>`_
 
 B. Torben-Nielsen
 """

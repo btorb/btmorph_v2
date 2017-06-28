@@ -10,7 +10,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import math
 
-class VoxelGrid(object) :
+
+class VoxelGrid(object):
     """
     Represents voxelized 3D model of an object with given dimensions and resolution
     Dimensions: real dimensions of an object in micrometers
@@ -18,9 +19,9 @@ class VoxelGrid(object) :
     """
     def __str__(self):
         return "VoxelGrid, dimensions=" + str(self.dim) + ",resoultion=" + str(self.res) + ",size=" + \
-            str(len(self.grid)) + ", encompassing box=" +str(self.encompassingBox) + \
+            str(len(self.grid)) + ", encompassing box=" + str(self.encompassingBox) + \
             ", voxel dimension:=" + str(self.dV) + ", total volume=" + str(len(self.grid)*(self.dV**3))\
-            + ", offset=" +str(self.offset)
+            + ", offset=" + str(self.offset)
             
     @staticmethod
     def check_key(dims, key):
@@ -31,14 +32,14 @@ class VoxelGrid(object) :
             raise TypeError("The key must be a tuple of 3 integers")
         if len(key) < 3:
             raise TypeError("The key must be a tuple of 3 integers")        
-        (x,y,z) = key
+        (x, y, z) = key
         if not (isinstance(x, int) and isinstance(y, int) and isinstance(z, int)):
             raise TypeError("The key must be a tuple of 3 integers") 
-        if (x < 0 or x > dims[0]):
-            raise IndexError("Index is out of range:"  + str(key))
-        if (y < 0 or y > dims[1]):
-            raise IndexError("Index is out of range:"+ str(key))
-        if (z < 0 or z > dims[2]):
+        if x < 0 or x > dims[0]:
+            raise IndexError("Index is out of range:" + str(key))
+        if y < 0 or y > dims[1]:
+            raise IndexError("Index is out of range:" + str(key))
+        if z < 0 or z > dims[2]:
             raise IndexError("Index is out of range:" + str(key))
         return True
         
@@ -59,10 +60,10 @@ class VoxelGrid(object) :
         VoxelGrid.check_key(self.res, key)
         if not isinstance(value, bool):
             raise TypeError("The value must be boolean")
-        if key in self.grid and value == False:
+        if key in self.grid and not value:
             del self.grid[key]
-        elif value == True:
-            for i in range(0,3):
+        elif value:
+            for i in range(0, 3):
                 if key[i] < self.encompassingBox[i][0]:
                     self.encompassingBox[i][0] = key[i]
                 if key[i] > self.encompassingBox[i][1]:
@@ -84,10 +85,10 @@ class VoxelGrid(object) :
         """
         if not (len(dimensions) == 3 and len(resolution) == 3):
             raise TypeError("Dimensions and resolution must be number iterables of length 3")
-        for i in range(0,3):
+        for i in range(0, 3):
             if not VoxelGrid.is_power_of_two(resolution[i]):
                 raise IndexError("Resolution must be power of 2")
-        dimensions = [dimensions[0],dimensions[1], dimensions[2]]
+        dimensions = [dimensions[0], dimensions[1], dimensions[2]]
         self.dim = VoxelGrid.adjust_dimensions(dimensions, resolution)
         self.res = resolution
         self.grid = {}
@@ -96,7 +97,7 @@ class VoxelGrid(object) :
         self.encompassingBox[0] = [self.res[0], 0]
         self.encompassingBox[1] = [self.res[1], 0]
         self.encompassingBox[2] = [self.res[2], 0]
-        self.offset = (0,0,0)
+        self.offset = (0, 0, 0)
         self.add_tree(tree)
         
     @staticmethod    
@@ -119,20 +120,20 @@ class VoxelGrid(object) :
         """
         if not (len(dimensions) == 3 and len(resolution) == 3):
             raise TypeError("Dimension and resolution must be number iterables of length 3")
-        for i in range(0,3):
+        for i in range(0, 3):
             if not (dimensions[i] >= 0 and resolution[i] >= 0):
                 raise IndexError("Dimensions and resolution must be positive")
         # Check if all dimensions match
         # Is more than one dimension and/or resolution is zero?
-        if (resolution.count(0) > 1 or (len(dimensions) - np.count_nonzero(dimensions)) > 1):
+        if resolution.count(0) > 1 or (len(dimensions) - np.count_nonzero(dimensions)) > 1:
             return None
         # Is there a case where dimension/resolution is zero but not both of them are zero?
         for i in range(0, 3):
             if resolution[i]*dimensions[i] == 0 and resolution[i]+dimensions[i] != 0 and resolution[i] != 1:
                 return None
-        [x,y,z] = dimensions
-        [x_new,y_new,z_new] = [x,y,z]
-        [rx,ry,rz] = resolution
+        [x, y, z] = dimensions
+        [x_new, y_new, z_new] = [x, y, z]
+        [rx, ry, rz] = resolution
         if x > y * float(rx)/float(ry):
             y_new = x * float(ry)/float(rx)
             if z > x * float(rz)/float(rx):
@@ -147,10 +148,10 @@ class VoxelGrid(object) :
                 x_new = y_new * float(rx)/float(ry)
             else:
                 z_new = y * float(rz)/float(ry)  
-        return [x_new,y_new,z_new]
+        return [x_new, y_new, z_new]
     
     @staticmethod
-    def is_power_of_two(int_num) :
+    def is_power_of_two(int_num):
         """
         Checks if the number is a power of two
         
@@ -165,13 +166,13 @@ class VoxelGrid(object) :
         """
         return isinstance(int_num, int) and int_num > 0 and (int_num & (int_num - 1) == 0)
         
-    def plot(this):
+    def plot(self):
         """ 
         Plot the grid as a scattered 3d plot
         """
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
-        keys = this.grid.keys();
+        keys = self.grid.keys()
         xs, ys, zs = [], [], []
         for coords in keys:
             xs.append(coords[0])
@@ -255,7 +256,7 @@ class VoxelGrid(object) :
         if radius1 < 0 or radius2 < 0:
             return False
         point = self.voxel_to_dimension(point)
-        #voxel_c = point
+        # voxel_c = point
         point = (point[0] - center1[0], point[1] - center1[1], point[2] - center1[2])
         abs_p = math.sqrt(point[0]**2 + point[1]**2 + point[2]**2)
         if center1 == center2:
@@ -277,7 +278,7 @@ class VoxelGrid(object) :
         proj_plane = abs_p * s
         r = l * (radius2-radius1)/abs_a + radius1
         # One of the points falls into the voxel
-        fiv = False#center1[0] - voxel_c[0] < self.dV or center1[1] - voxel_c[1] < self.dV or center1[2] - voxel_c[2] < self.dV
+        fiv = False  # center1[0] - voxel_c[0] < self.dV or center1[1] - voxel_c[1] < self.dV or center1[2] - voxel_c[2] < self.dV
         # Voxel falls in frustum or frustum falls intro voxel        
         return proj_plane <= r or fiv
     
@@ -301,23 +302,22 @@ class VoxelGrid(object) :
         List of ranges for each axis (in voxels)
         [(x1,x2), (y1,y2), (z1,z2)]
         """
-        if radius1 == None or radius2 == None or center1 == None or center2 == None:
+        if radius1 is None or radius2 is None or center1 is None or center2 is None:
             return None
         if radius1 < 0 or radius2 < 0 :
             return None
-        (x1,y1,z1) = center1
-        (x2,y2,z2) = center2
+        (x1, y1, z1) = center1
+        (x2, y2, z2) = center2
         r1 = radius1
         r2 = radius2
-        rangeX = (max(min(x1-r1, x2-r2), 0), min(max(x1+r1,x2+r2),self.dim[0]))
-        rangeY = (max(min(y1-r1, y2-r2), 0), min(max(y1+r1,y2+r2),self.dim[1]))
-        rangeZ = (max(min(z1-r1, z2-r2), 0), min(max(z1+r1,z2+r2),self.dim[2]))
-        rangeX = (int(round(rangeX[0]/self.dV)), int(round(rangeX[1]/self.dV)))
-        rangeY = (int(round(rangeY[0]/self.dV)), int(round(rangeY[1]/self.dV)))  
-        rangeZ = (int(round(rangeZ[0]/self.dV)), int(round(rangeZ[1]/self.dV)))
+        rangeX = (max(min(x1 - r1, x2 - r2), 0), min(max(x1 + r1, x2 + r2), self.dim[0]))
+        rangeY = (max(min(y1 - r1, y2 - r2), 0), min(max(y1 + r1, y2 + r2), self.dim[1]))
+        rangeZ = (max(min(z1 - r1, z2 - r2), 0), min(max(z1 + r1, z2 + r2), self.dim[2]))
+        rangeX = (int(round(rangeX[0] / self.dV)), int(round(rangeX[1] / self.dV)))
+        rangeY = (int(round(rangeY[0] / self.dV)), int(round(rangeY[1] / self.dV)))
+        rangeZ = (int(round(rangeZ[0] / self.dV)), int(round(rangeZ[1] / self.dV)))
         return [rangeX, rangeY, rangeZ]
-    
-       
+
     def add_frustum(self, center1, radius1, center2, radius2):
         """
         Adds a voxelized filled frustum of the given radii and base centers to the grid
@@ -342,17 +342,17 @@ class VoxelGrid(object) :
            max(center1[0] + radius1, center2[0] + radius2) < 0 or\
            max(center1[1] + radius1, center2[1] + radius2) < 0 or\
            max(center1[2], center2[2]) < 0:
-               return
+            return
         # Calculate encompassing box
         ranges = self.calc_encompassing_box_frustum(center1, radius1, center2, radius2)
-        if ranges == None:
+        if ranges is None:
             return
-        [(x1,x2), (y1,y2), (z1,z2)] = ranges
+        [(x1, x2), (y1, y2), (z1, z2)] = ranges
         for x in range(x1, x2+1):
             for y in range(y1, y2+1):
                 for z in range(z1, z2+1):                    
-                    if self.falls_into_frustum((x,y,z), center1, radius1, center2, radius2):
-                        self[(x,y,z)] = True
+                    if self.falls_into_frustum((x, y, z), center1, radius1, center2, radius2):
+                        self[(x, y, z)] = True
     
     def add_sphere(self, center, radius):
         """
@@ -366,13 +366,13 @@ class VoxelGrid(object) :
         The sphere's radius
         """
         ranges = self.calc_encompassing_box_sphere(center, radius)
-        if ranges == None:
+        if ranges is None:
             return
-        [(x1,x2), (y1,y2), (z1,z2)] = ranges
+        [(x1, x2), (y1, y2), (z1, z2)] = ranges
         for x in range(x1, x2+1):
             for y in range(y1, y2+1):
                 for z in range(z1, z2+1):
-                    self[(x,y,z)] = self.falls_into_sphere((x,y,z), center, radius)
+                    self[(x, y, z)] = self.falls_into_sphere((x, y, z), center, radius)
     
     def add_tree(self, tree):
         """
@@ -384,10 +384,10 @@ class VoxelGrid(object) :
         A tree to be voxelized
         """
         # If tree == None => do nothing
-        if None == tree:
+        if tree is None:
             return
         nodes = tree.get_nodes()
-        if None == nodes or len(nodes) == 0:
+        if nodes is None or len(nodes) == 0:
             return
         # point with min x y and z
         minX = self.dim[0]
@@ -395,7 +395,7 @@ class VoxelGrid(object) :
         minZ = self.dim[2]
         for node in nodes:
             p = node.content['p3d']
-            (x,y,z) = tuple(p.xyz)
+            (x, y, z) = tuple(p.xyz)
             if x < minX:
                 minX = x
             if y < minY:
@@ -406,20 +406,20 @@ class VoxelGrid(object) :
         # Add soma as sphere
         p = tree.get_node_with_index(1).content['p3d']
         r = p.radius
-        (x,y,z) = tuple(p.xyz)
+        (x, y, z) = tuple(p.xyz)
         center = (x - minX, y - minY, z - minZ)
         self.add_sphere(center, r)
         # Add all segments
         for node in nodes:
             p = node.content['p3d']
-            (x,y,z) = tuple(p.xyz)
+            (x, y, z) = tuple(p.xyz)
             center1 = (x - minX, y - minY, z - minZ)
             r1 = p.radius
             pNode = node.parent
-            if pNode == None:
+            if pNode is None:
                 continue
             parentP = pNode.content['p3d']
-            (x,y,z) = tuple(parentP.xyz)
+            (x, y, z) = tuple(parentP.xyz)
             center2 = (x - minX, y - minY, z - minZ)
             r2 = parentP.radius
             self.add_frustum(center1, r1, center2, r2)
@@ -437,9 +437,9 @@ class VoxelGrid(object) :
         ------------
         Coordinates in real dimension values (micrometers)
         """
-        if point == None:
+        if point is None:
             return None
-        return (point[0]*self.dV, point[1]*self.dV, point[2]*self.dV)
+        return point[0] * self.dV, point[1] * self.dV, point[2] * self.dV
         
     def dimension_to_voxel(self, point):
         """
@@ -454,7 +454,9 @@ class VoxelGrid(object) :
         ------------
         Voxel coordinates
         """
-        if point == None:
+        if point is None:
             return None
-        return (int(round(point[0]/self.dV)), int(round(point[1]/self.dV)), int(round(point[2]/self.dV)))
+        return int(round(point[0] / self.dV)), \
+               int(round(point[1] / self.dV)),\
+               int(round(point[2] / self.dV))
 

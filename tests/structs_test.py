@@ -1,11 +1,10 @@
 '''
-Test routines for the btstructs2.py file
+Test routines for the btstructs.py file
 '''
 
 from btmorph2 import NeuronMorphology
 import numpy as np
 from nose.tools import with_setup
-from scipy import misc
 
 
 def test_soma_type_3ps():
@@ -90,7 +89,7 @@ def test_global_bifurcations():
     """
     swc_neuron1 = NeuronMorphology('tests/v_e_moto1.CNG.swc')
     no_bifurcations = swc_neuron1.no_bifurcations()
-    print(('no_bifurcations=%f' % (no_bifurcations)))
+    print(('no_bifurcations=%f' % no_bifurcations))
     assert(no_bifurcations == 122)
 
 
@@ -100,7 +99,7 @@ def test_global_terminals():
     """
     swc_neuron1 = NeuronMorphology('tests/v_e_moto1.CNG.swc')
     no_terminals = swc_neuron1.no_terminals()
-    print(('no_terminals=%f' % (no_terminals)))
+    print(('no_terminals=%f' % no_terminals))
     assert(no_terminals == 132)
 
 
@@ -110,7 +109,7 @@ def test_global_stems():
     """
     swc_neuron1 = NeuronMorphology('tests/v_e_moto1.CNG.swc')
     no_stems = swc_neuron1.no_stems()
-    print(('no_stems=%s' % (no_stems)))
+    print(('no_stems=%s' % no_stems))
     assert(no_stems == 10)
 
 
@@ -130,7 +129,7 @@ def test_global_somasurface():
     """
     swc_neuron1 = NeuronMorphology('tests/v_e_moto1.CNG.swc')
     soma_surface = swc_neuron1.approx_soma()
-    print(('soma surface=%f' % (soma_surface)))
+    print(('soma surface=%f' % soma_surface))
     assert(45238 < soma_surface < 45239)
 
 
