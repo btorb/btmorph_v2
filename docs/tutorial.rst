@@ -74,7 +74,32 @@ which produces the following image:
 .. image:: figures/v_e_moto1_sholl.png
   :scale: 50
 
-Clearly, in the above figure we can distinguish the bimodal distribution introduced by some the basal and oblique dendrites on the one hand, and the distal apical dendrites on the other.
+This Sholl analysis is rather dull. We can perform the same analysis for
+a pyramidal neuron, with basal and apical dendrites.::
+
+  pyramid = btmorph2.NeuronMorphology("data/CTh5080306F.CNG_filtered.swc")
+  p_bifs = pyramid.get_points_of_interest()[1] #soma, bifurcations, terminals
+  p_eucl = []
+  for node in p_bifs:
+      p_eucl.append(pyramid.get_Euclidean_length_to_root(node))
+  plt.hist(p_eucl)
+  plt.title('(Almost) Sholl analysis')
+  plt.xlabel('euclidean distance (micron)')
+  plt.ylabel('count / crossings')  
+
+The resultant plot below illustrates the bimodal distribution where basal
+dendrites are close to the soma and apical dendrites further away.
+
+.. image:: figures/pyramid_sholl.png
+  :scale: 50
+
+The example code is as close as possible to the conceptual understanding
+of what needs to be done. However, more Pythonic and succinct ways
+exist as well. The previous code snippet can be rewritten as::
+
+  pyramid = btmorph2.NeuronMorphology("data/CTh5080306F.CNG_filtered.swc")
+  p_eucl = [pyramid.get_Euclidean_length_to_root(node) \
+           for node in pyramid.get_points_of_interest()[1]]
 
 Finally, to visually inspect both morphologies we could plot them::
 
