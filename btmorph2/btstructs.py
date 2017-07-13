@@ -3,11 +3,12 @@ File contains:
 
     - :class:`PopulationMorphology`
     - :class:`NeuronMorphology`
+    - :class:`Tree`
     - :class:`Node`
     - :class:`P3D`
 B. Torben-Nielsen (from legacy code).
 
-Daniele Linaro contributed the iterators in  :class:`STree2`.
+Daniele Linaro contributed the iterators in  :class:`Tree`.
 
 Sam Sutton refactored and renamed classes, implemented
     PopulationMorphology and NeuronMorphology
@@ -818,6 +819,14 @@ class NeuronMorphology(object):
         return d
 
     def max_degree(self):
+        """
+        Maximal degree of any node in a neuronal structure.
+
+        Returns
+        -------
+        max_degree : float
+            Highest degree in a neuronal structure
+        """
         # -1: subtract the 2 fake nodes from the 3-point soma position
         return self.degree_of_node(self.tree.root)-2
     
