@@ -11,7 +11,7 @@ B. Torben-Nielsen (from legacy code).
 Daniele Linaro contributed the iterators in  :class:`Tree`.
 
 Sam Sutton refactored and renamed classes, implemented
-    PopulationMorphology and NeuronMorphology
+PopulationMorphology and NeuronMorphology
 """
 import sys
 import h5py
