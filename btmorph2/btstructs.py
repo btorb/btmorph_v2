@@ -15,11 +15,13 @@ Sam Sutton refactored and renamed classes, implemented
 import sys
 import numpy as np
 
-from btmorph2.btviz import plot_2D
-from btmorph2.btviz import plot_3D
-from btmorph2.btviz import animate
-from btmorph2.btviz import plot_dendrogram
+from .btviz import plot_2D
+from .btviz import plot_3D
+from .btviz import animate
+from .btviz import plot_dendrogram
 from numpy import mean, cov, dot, linalg, transpose
+from .SWCParsing import SWCParsing
+
 
 
 class PopulationMorphology(object):
@@ -1819,29 +1821,36 @@ class Tree(object):
 
         However, two other options to describe the soma
         are still allowed and available, namely:
-        - soma absent: btmorph adds a 3-point soma in between of
-            [TO DEFINE/TODO]
-        - multiple cylinder: [TO DEFINE/TODO]
+        - soma absent: not implemented
+        - multiple cylinder: reduces it to a three point soma with the same surface
 
         """
-        # check soma-representation: 3-point soma or a non-standard
-        # representation
-        self.soma_type = self._determine_soma_type(input_file)
-        print("NeuronMorphology::read_SWC_tree_from_file found soma_type=%i" \
-            % self.soma_type)
 
-        f = open(input_file, 'r')
-        all_nodes = dict()
-        for line in f:
-            if not line.startswith('#'):
-                split = line.split()
-                index = int(split[0].rstrip())
-                swc_type = int(split[1].rstrip())
-                x = float(split[2].rstrip())
-                y = float(split[3].rstrip())
-                z = float(split[4].rstrip())
-                radius = float(split[5].rstrip())
-                parent_index = int(split[6].rstrip())
+
+        swc_parsing = SWCParsing(input_file)
+        nTrees = swc_parsing.numberOfTrees()
+
+        if nTrees > 1:
+
+            raise ValueError("Given SWC File {} has more than one trees".format(input_file))
+
+        else:
+
+            swcDatasetsTypes = swc_parsing.getSWCDatasetsTypes()
+
+            self.soma_type = swcDatasetsTypes.keys()[0]
+            swcData = swcDatasetsTypes.values()[0]
+
+            all_nodes = dict()
+            for line in swcData:
+
+                index = int(line[0])
+                swc_type = int(line[1])
+                x = float(line[2])
+                y = float(line[3])
+                z = float(line[4])
+                radius = float(line[5])
+                parent_index = int(line[6])
 
                 # 2015-06-17
                 if self.soma_type == 0 and index > 1:
@@ -1858,91 +1867,94 @@ class Tree(object):
                     # print type,index
                     pass
 
-        # print "len(all_nodes): ", len(all_nodes)
+            # print "len(all_nodes): ", len(all_nodes)
 
-        # IF 1-point soma representation
-        if self.soma_type == 0:
-            for index, (swc_type, node, parent_index) in all_nodes.items():
-                if index == 1:
-                    # print "Set soma -- 1-point soma"
-                    self.root = node
-                    """add 2 extra point because the internal representation
-                    relies on the 3-point soma position.
-                    Shift all subsequent indices by 2."""
-                    sp = node.content['p3d']
-                    """
-                     1 1 xs ys zs rs -1
-                     2 1 xs (ys-rs) zs rs 1
-                     3 1 xs (ys+rs) zs rs 1
-                    """
-                    pos1 = P3D([sp.xyz[0], sp.xyz[1]-sp.radius,
-                                sp.xyz[2]], sp.radius, 1)
-                    pos2 = P3D([sp.xyz[0], sp.xyz[1]+sp.radius,
-                                sp.xyz[2]], sp.radius, 1)
-                    sub1 = Node(2)
-                    sub1.content = {'p3d': pos1}
-                    sub2 = Node(3)
-                    sub2.content = {'p3d': pos2}
-                    self.add_node_with_parent(sub1, self.root)
-                    self.add_node_with_parent(sub2, self.root)
-                else:
-                    parent_node = all_nodes[parent_index][1]
-                    if parent_node is None:
-                        print("parent appears to be NONE")
-                    if parent_node.index > 1:
-                        parent_node.index = parent_node.index  # +2
-                    if node.index > 1:
-                        node.index = node.index  # +2
-                    self.add_node_with_parent(node, parent_node)
-
-        # IF 3-point soma representation
-        if self.soma_type == 1:
-            for index, (swc_type, node, parent_index) in all_nodes.items():
-                if index == 1:
-                    # print "Set soma -- 3 point soma"
-                    self.root = node
-                elif index in (2, 3):
-                    # the 3-point soma representation
-                    # (http://neuromorpho.org/neuroMorpho/SomaFormat.html)
-                    self.add_node_with_parent(node, self.root)
-                else:
-                    parent_node = all_nodes[parent_index][1]
-                    self.add_node_with_parent(node, parent_node)
-        # IF multiple cylinder soma representation
-        elif self.soma_type == 2:
-            self.root = all_nodes[1][1]
-
-            # get all some info
-            soma_cylinders = []
-            connected_to_root = []
-            for index, (swc_type, node, parent_index) in all_nodes.items():
-                if swc_type == 1 and not index == 1:
-                    soma_cylinders.append((node, parent_index))
-                    if index > 1:
-                        connected_to_root.append(index)
-
-            # make soma
-            s_node_1, s_node_2 = self._make_soma_from_cylinders(soma_cylinders,
-                                                                all_nodes)
-
-            # add soma
-            self.root = all_nodes[1][1]
-            self.root.content["p3d"].radius = s_node_1.content["p3d"].radius
-            self.add_node_with_parent(s_node_1, self.root)
-            self.add_node_with_parent(s_node_2, self.root)
-
-            # add the other points
-            for index, (swc_type, node, parent_index) in all_nodes.items():
-                if swc_type == 1:
-                    pass
-                else:
-                    parent_node = all_nodes[parent_index][1]
-                    if parent_node.index in connected_to_root:
-                        self.add_node_with_parent(node, self.root)
+            # IF 1-point soma representation
+            if self.soma_type == 0:
+                for index, (swc_type, node, parent_index) in all_nodes.items():
+                    if index == 1:
+                        # print "Set soma -- 1-point soma"
+                        self.root = node
+                        """add 2 extra point because the internal representation
+                        relies on the 3-point soma position.
+                        Shift all subsequent indices by 2."""
+                        sp = node.content['p3d']
+                        """
+                         1 1 xs ys zs rs -1
+                         2 1 xs (ys-rs) zs rs 1
+                         3 1 xs (ys+rs) zs rs 1
+                        """
+                        pos1 = P3D([sp.xyz[0], sp.xyz[1]-sp.radius,
+                                    sp.xyz[2]], sp.radius, 1)
+                        pos2 = P3D([sp.xyz[0], sp.xyz[1]+sp.radius,
+                                    sp.xyz[2]], sp.radius, 1)
+                        sub1 = Node(2)
+                        sub1.content = {'p3d': pos1}
+                        sub2 = Node(3)
+                        sub2.content = {'p3d': pos2}
+                        self.add_node_with_parent(sub1, self.root)
+                        self.add_node_with_parent(sub2, self.root)
                     else:
+                        parent_node = all_nodes[parent_index][1]
+                        if parent_node is None:
+                            print("parent appears to be NONE")
+                        if parent_node.index > 1:
+                            parent_node.index = parent_node.index  # +2
+                        if node.index > 1:
+                            node.index = node.index  # +2
                         self.add_node_with_parent(node, parent_node)
 
-        return self
+            # IF 3-point soma representation
+            elif self.soma_type == 1:
+                for index, (swc_type, node, parent_index) in all_nodes.items():
+                    if index == 1:
+                        # print "Set soma -- 3 point soma"
+                        self.root = node
+                    elif index in (2, 3):
+                        # the 3-point soma representation
+                        # (http://neuromorpho.org/neuroMorpho/SomaFormat.html)
+                        self.add_node_with_parent(node, self.root)
+                    else:
+                        parent_node = all_nodes[parent_index][1]
+                        self.add_node_with_parent(node, parent_node)
+            # IF multiple cylinder soma representation
+            elif self.soma_type == 2:
+                self.root = all_nodes[1][1]
+
+                # get all some info
+                soma_cylinders = []
+                connected_to_root = []
+                for index, (swc_type, node, parent_index) in all_nodes.items():
+                    if swc_type == 1 and not index == 1:
+                        soma_cylinders.append((node, parent_index))
+                        if index > 1:
+                            connected_to_root.append(index)
+
+                # make soma
+                s_node_1, s_node_2 = self._make_soma_from_cylinders(soma_cylinders,
+                                                                    all_nodes)
+
+                # add soma
+                self.root = all_nodes[1][1]
+                self.root.content["p3d"].radius = s_node_1.content["p3d"].radius
+                self.add_node_with_parent(s_node_1, self.root)
+                self.add_node_with_parent(s_node_2, self.root)
+
+                # add the other points
+                for index, (swc_type, node, parent_index) in all_nodes.items():
+                    if swc_type == 1:
+                        pass
+                    else:
+                        parent_node = all_nodes[parent_index][1]
+                        if parent_node.index in connected_to_root:
+                            self.add_node_with_parent(node, self.root)
+                        else:
+                            self.add_node_with_parent(node, parent_node)
+
+            else:
+                raise NotImplementedError("No Soma Found for {}".format(input_file))
+
+            return self
 
     def write_SWC_tree_to_file(self, input_file):
 
@@ -2026,8 +2038,8 @@ class Tree(object):
 
         return s_node_1, s_node_2
 
-
-    def _determine_soma_type(self,file_n):
+    @staticmethod
+    def determine_soma_type(file_n):
         """
         Costly method to determine the soma type used in the SWC file.
         This method searches the whole file for soma entries.  
@@ -2046,7 +2058,7 @@ class Tree(object):
             2: multiple cylinder description,
             3: otherwise [not suported in btmorph]
         """
-        file = open(file_n,"r")
+        file = open(file_n, "r")
         somas = 0
         for line in file:
             if not line.startswith('#') :
@@ -2058,7 +2070,7 @@ class Tree(object):
         file.close()
         if somas == 3:
             return 1
-        elif somas ==1:
+        elif somas == 1:
             return 0
         elif somas > 3:
             return 2

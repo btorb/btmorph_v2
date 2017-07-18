@@ -16,7 +16,7 @@ def test_soma_type_3ps():
 
 def test_soma_type_1ps():
     """
-    Test if SWC 1-point soma  description is correctly recognized
+    Test if SWC 1-point soma  description is correctly recognized: v_e_purk2.CNG.swc
     """
     swc_neuron1 = NeuronMorphology("tests/v_e_purk2.CNG.swc")
     assert(swc_neuron1.tree.soma_type == 0)
@@ -24,7 +24,7 @@ def test_soma_type_1ps():
 
 def test_soma_type_1ps():
     """
-    Test if SWC 1-point soma description is correctedly recognized
+    Test if SWC 1-point soma description is correctedly recognized: 1220882a.CNG.swc
     """
     swc_neuron1 = NeuronMorphology("tests/soma_types/1220882a.CNG.swc")
     assert(swc_neuron1.tree.soma_type == 0)
@@ -36,6 +36,18 @@ def test_soma_type_mc():
     swc_neuron1 = NeuronMorphology("tests/soma_types/l22.CNG.swc")
     assert(swc_neuron1.tree.soma_type == 2)
 
+
+def test_NeuronMorphology_multipleTrees():
+    """
+    Test if initializing a NeuronMorphology object with an SWC file with multiple trees raises and error
+    """
+
+    input_file = "tests/117.v3dpbd/08_117.v3dpbd_neutube_updated.swc"
+
+    try:
+        nrn = NeuronMorphology(input_file)
+    except ValueError as v:
+        assert v.message == "Given SWC File {} has more than one trees".format(input_file)
 
 def test_load_swc():
     '''
