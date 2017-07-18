@@ -8,7 +8,8 @@ setup(
     install_requires=[
         "numpy>=1.11.2",
         "matplotlib>=1.5.3",
-        "scipy>=0.18.1"
+        "scipy>=0.18.1",
+        "networkX>=1.11"
      ],
     python_requires=">=2.7",
 )

@@ -5,3 +5,6 @@ bif_cloud*
 
 .rope*
 
+.eggs/
+.idea/
+btmorph2.egg-info/

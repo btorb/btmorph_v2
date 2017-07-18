@@ -1,0 +1,56 @@
+Testing the import of tests/horton-strahler_test_wiki.swc
+Testing the import of tests/horton-strahler_test_wiki_3pointsoma.swc
+Testing the import of tests/v_e_purk2.CNG.swc
+Testing the import of tests/soma_only.swc
+Testing the import of tests/moto_1_outputted.swc
+Testing the import of tests/v_e_moto1.CNG.swc
+Testing the import of tests/soma_types/1220882a.CNG.swc
+Testing the import of tests/soma_types/ri05.CNG.swc
+("found 'multiple cylinder soma' w/ total soma surface=", 503.40666424503871)
+Testing the import of tests/soma_types/l22.CNG.swc
+("found 'multiple cylinder soma' w/ total soma surface=", 1416.2970398935963)
+Testing the import of tests/117.v3dpbd/10_117.v3dpbd_ENT_updated.swc
+No Soma Found for tests/117.v3dpbd/10_117.v3dpbd_ENT_updated.swc
+Testing the import of tests/117.v3dpbd/03_117.v3dpbd_NeuroGPSTree.swc
+Given SWC File tests/117.v3dpbd/03_117.v3dpbd_NeuroGPSTree.swc has more than one trees
+Testing the import of tests/117.v3dpbd/05_117.v3dpbd_Advantra.swc
+No Soma Found for tests/117.v3dpbd/05_117.v3dpbd_Advantra.swc
+Testing the import of tests/117.v3dpbd/15_117.v3dpbd_app2new2.swc
+No Soma Found for tests/117.v3dpbd/15_117.v3dpbd_app2new2.swc
+Testing the import of tests/117.v3dpbd/01_117.v3dpbd_axis_analyzer.swc
+No Soma Found for tests/117.v3dpbd/01_117.v3dpbd_axis_analyzer.swc
+Testing the import of tests/117.v3dpbd/18_117.v3dpbd_x1439_y1439_z474_app2.swc
+No Soma Found for tests/117.v3dpbd/18_117.v3dpbd_x1439_y1439_z474_app2.swc
+Testing the import of tests/117.v3dpbd/08_117.v3dpbd_neutube_updated.swc
+Given SWC File tests/117.v3dpbd/08_117.v3dpbd_neutube_updated.swc has more than one trees
+Testing the import of tests/117.v3dpbd/13_117.v3dpbd_app2new1.swc
+No Soma Found for tests/117.v3dpbd/13_117.v3dpbd_app2new1.swc
+Testing the import of tests/117.v3dpbd/04_117.v3dpbd_axis_analyzer_updated.swc
+Given SWC File tests/117.v3dpbd/04_117.v3dpbd_axis_analyzer_updated.swc has more than one trees
+Testing the import of tests/117.v3dpbd/12_117.v3dpbd_Advantra_updated.swc
+No Soma Found for tests/117.v3dpbd/12_117.v3dpbd_Advantra_updated.swc
+Testing the import of tests/117.v3dpbd/00_sorted_yun_dendrites_apical.v3dpbd_stamp_2015_06_15_15_02.swc_sorted.swc
+Testing the import of tests/117.v3dpbd/19_117.v3dpbd_NeuroGPSTree_updated.swc
+No Soma Found for tests/117.v3dpbd/19_117.v3dpbd_NeuroGPSTree_updated.swc
+Testing the import of tests/117.v3dpbd/06_117.v3dpbd_MOST.swc
+Given SWC File tests/117.v3dpbd/06_117.v3dpbd_MOST.swc has more than one trees
+Testing the import of tests/117.v3dpbd/21_117.v3dpbd_tubularity_model_S.v3draw_MST_Tracing_Ws_21_th_200.swc
+No Soma Found for tests/117.v3dpbd/21_117.v3dpbd_tubularity_model_S.v3draw_MST_Tracing_Ws_21_th_200.swc
+Testing the import of tests/117.v3dpbd/09_117.v3dpbd_neutu_autotrace.swc
+Given SWC File tests/117.v3dpbd/09_117.v3dpbd_neutu_autotrace.swc has more than one trees
+Testing the import of tests/117.v3dpbd/16_117.v3dpbd_EnsembleNeuronTracerV2n.swc
+File tests/117.v3dpbd/16_117.v3dpbd_EnsembleNeuronTracerV2n.swc has cyclic connections!
+Testing the import of tests/117.v3dpbd/07_117.v3dpbd_neutube.swc
+Given SWC File tests/117.v3dpbd/07_117.v3dpbd_neutube.swc has more than one trees
+Testing the import of tests/117.v3dpbd/14_117.v3dpbd_app2new3.swc
+No Soma Found for tests/117.v3dpbd/14_117.v3dpbd_app2new3.swc
+Testing the import of tests/117.v3dpbd/17_117.v3dpbd_EnsembleNeuronTracerV2s.swc
+File tests/117.v3dpbd/17_117.v3dpbd_EnsembleNeuronTracerV2s.swc has cyclic connections!
+Testing the import of tests/117.v3dpbd/02_117.v3dpbd_MST_Tracing.swc
+Given SWC File tests/117.v3dpbd/02_117.v3dpbd_MST_Tracing.swc has more than one trees
+Testing the import of tests/117.v3dpbd/20_117.v3dpbd_tubularity_model_S.v3draw_MST_Tracing_Ws_21_th_170_updated.swc
+No Soma Found for tests/117.v3dpbd/20_117.v3dpbd_tubularity_model_S.v3draw_MST_Tracing_Ws_21_th_170_updated.swc
+Testing the import of tests/117.v3dpbd/11_117.v3dpbd_NeuronChaser_updated.swc
+No Soma Found for tests/117.v3dpbd/11_117.v3dpbd_NeuronChaser_updated.swc
+Testing the import of tests/117.v3dpbd/22_117.v3dpbd_Rayshooting.swc
+No Soma Found for tests/117.v3dpbd/22_117.v3dpbd_Rayshooting.swc
