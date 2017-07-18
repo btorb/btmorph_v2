@@ -6,9 +6,10 @@ From btorboist/btmorph_v2
 On the NeuroMorpho.org website, 5 types of soma descriptions are considered (http://neuromorpho.org/neuroMorpho/SomaFormat.html).The "3-point soma" is the standard and most files are converted to this format during a curation step. btmorph follows this default specification and the *internal structure of btmorph implements the 3-point soma*.
 
 However, two other options to describe the soma are still allowed and available, namely:
-- soma absent: btmorph adds a 3-point soma in between of
-    [TO DEFINE/TODO]
-- multiple cylinder: [TO DEFINE/TODO]
+- soma absent: if the argument correctIfSomaAbsent is specified to be True, then it manually sets the type of
+  the root to be 1 and treats it as if it had a one point soma.
+- multiple cylinder: Converts it to a 3-point soma format with the same surface area as the multiple cylinder soma
+  specified in the SWC file.
 
 
 SWC Basic Assumptions:
@@ -16,12 +17,12 @@ SWC Basic Assumptions:
 1. A SWC file contains rows of numbers, each atleast 7 columns wide. Each row represents a node.
 2. The columns are expected to be so:
         1. ID of the node, integer
-	2. type of the node, integer
-	3. x coordinate of the node, float
-	4. y coordinate of the node, float
-	5. z coordinate of the node, float
-	6. radius associated with the node, float
-	7. ID of the parent node of current node, integer (negative if current node is root)
+        2. type of the node, integer
+        3. x coordinate of the node, float
+        4. y coordinate of the node, float
+        5. z coordinate of the node, float
+        6. radius associated with the node, float
+        7. ID of the parent node of current node, integer (negative if current node is root)
 
 
 Further Assumptions:
@@ -30,5 +31,5 @@ Further Assumptions:
 2. The first row need not be a root.
 3. The parent of a row need not preceeded it.
 4. IDs of two consecutive rows need not be consecutive.
-5. Must not contain a cycle
+5. Must not contain cycles.
 6. Must not contain exactly identical rows.

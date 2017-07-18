@@ -158,7 +158,7 @@ class NeuronMorphology(object):
 
     def __init__(self, input_file=None, pca_translate=False,
                  translate_origin=None, width="x", height="z",
-                 depth="y"):
+                 depth="y", correctIfSomaAbsent=False):
 
         """
         Default constructor.
@@ -188,6 +188,9 @@ class NeuronMorphology(object):
         depth : string
             Either "x", "y" or "z" to determine which axis in the SWC format
                 corresponds to the internally stored axis.
+        correctIfSomaAbsent: bool
+            if True, then for trees whose roots are not of type 1, the roots are
+            manually set to be of type 1 and treated as they have one point soma.
         """
 
         axis_config = [0, 0, 0]
@@ -215,6 +218,7 @@ class NeuronMorphology(object):
 
         if input_file is not None:
             self.axis_config = axis_config
+            self.correctIfSomaAbsent = correctIfSomaAbsent
             self.file = input_file
 
         if pca_translate:
@@ -265,7 +269,7 @@ class NeuronMorphology(object):
             File name of neuron to be created,
         """
         if tree is None:
-            self.__tree = Tree(self.file, self.axis_config)
+            self.__tree = Tree(self.file, self.axis_config, self.correctIfSomaAbsent)
         else:
             self.__tree = tree
         self._all_nodes = self.tree.get_nodes()
@@ -417,7 +421,7 @@ class NeuronMorphology(object):
         plot_dendrogram(self)
         
     def plot_2D(self, color_scheme="default", color_mapping=None,
-                synapses=None, save_image=None, depth='y',show_radius=True):
+                synapses=None, save_image=None, depth='y', show_radius=True):
 
         """
         Gate way to btviz plot_2D_SWC to create object orientated relationship
@@ -1354,7 +1358,7 @@ class Tree(object):
     this is a generic implementation of a tree structure as a linked list.
     '''
 
-    def __init__(self, input_file=None, axis_config=(0, 1, 2)):
+    def __init__(self, input_file=None, axis_config=(0, 1, 2), correctIfSomaAbsent=False):
 
         """
         Default constructor.
@@ -1363,10 +1367,16 @@ class Tree(object):
         -----------
         input_file : :class:`str`
             File name of neuron to be created,
+        axis_config: tuple of len 3
+            Specifying the column indices at which the x, y and z coordinates
+            are to be expected respectively.
+        correctIfSomaAbsent: bool
+            if True, then for trees whose roots are not of type 1, the roots are
+            manually set to be of type 1 and treated as they have one point soma.
         """
         if input_file is not None:
             self.root = None
-            self.read_SWC_tree_from_file(input_file)
+            self.read_SWC_tree_from_file(input_file, correctIfSomaAbsent=correctIfSomaAbsent)
         if (axis_config[0] is not 0 or axis_config[1]
                 is not 1 or axis_config[2] is not 2):  # switch axis
             if axis_config[0] == 0:
@@ -1805,7 +1815,7 @@ class Tree(object):
         if from_node.parent is not None:
             self._go_up_from_until(from_node.parent, to_node, n)
 
-    def read_SWC_tree_from_file(self, input_file, types=range(1, 10)):
+    def read_SWC_tree_from_file(self, input_file, types=range(1, 10), correctIfSomaAbsent=False):
 
         """
         Non-specific for a "tree data structure"
@@ -1824,6 +1834,17 @@ class Tree(object):
         - soma absent: not implemented
         - multiple cylinder: reduces it to a three point soma with the same surface
 
+        Parameters
+        -----------
+        input_file : :class:`str`
+            File name of neuron to be created
+        types: iterable of integers
+            Specifies the expected values for column 2 of an SWC file
+        correctIfSomaAbsent:
+            if True, then for trees whose roots are not of type 1, the roots are
+            manually set to be of type 1 and treated as they have one point soma.
+
+
         """
 
 
@@ -1836,7 +1857,7 @@ class Tree(object):
 
         else:
 
-            swcDatasetsTypes = swc_parsing.getSWCDatasetsTypes()
+            swcDatasetsTypes = swc_parsing.getSWCDatasetsTypes(correctIfSomaAbsent)
 
             self.soma_type = swcDatasetsTypes.keys()[0]
             swcData = swcDatasetsTypes.values()[0]
@@ -1852,17 +1873,16 @@ class Tree(object):
                 radius = float(line[5])
                 parent_index = int(line[6])
 
-                # 2015-06-17
-                if self.soma_type == 0 and index > 1:
-                    index = index + 2
-                if self.soma_type == 0 and parent_index > 1:
-                    parent_index = parent_index+2
-
                 if swc_type in types:
                     tP3D = P3D(np.array([x, y, z]), radius, swc_type)
                     t_node = Node(index)
                     t_node.content = {'p3d': tP3D}
                     all_nodes[index] = (swc_type, t_node, parent_index)
+                    if parent_index < 0:
+                        if self.root is None:
+                            self.root = t_node
+                        else:
+                            raise(ValueError("File {} has two roots!".format(input_file)))
                 else:
                     # print type,index
                     pass
@@ -1872,12 +1892,13 @@ class Tree(object):
             # IF 1-point soma representation
             if self.soma_type == 0:
                 for index, (swc_type, node, parent_index) in all_nodes.items():
-                    if index == 1:
-                        # print "Set soma -- 1-point soma"
-                        self.root = node
+                    if parent_index < 0:
+                        # Root has already been set above
+
                         """add 2 extra point because the internal representation
                         relies on the 3-point soma position.
-                        Shift all subsequent indices by 2."""
+                        Their indices will be 1 and 2 greater, respectively,
+                        than the maximum of all indices"""
                         sp = node.content['p3d']
                         """
                          1 1 xs ys zs rs -1
@@ -1888,54 +1909,43 @@ class Tree(object):
                                     sp.xyz[2]], sp.radius, 1)
                         pos2 = P3D([sp.xyz[0], sp.xyz[1]+sp.radius,
                                     sp.xyz[2]], sp.radius, 1)
-                        sub1 = Node(2)
+                        maxIndex = max(all_nodes.keys())
+                        sub1 = Node(maxIndex + 1)
                         sub1.content = {'p3d': pos1}
-                        sub2 = Node(3)
+                        sub2 = Node(maxIndex + 2)
                         sub2.content = {'p3d': pos2}
                         self.add_node_with_parent(sub1, self.root)
                         self.add_node_with_parent(sub2, self.root)
                     else:
                         parent_node = all_nodes[parent_index][1]
-                        if parent_node is None:
-                            print("parent appears to be NONE")
-                        if parent_node.index > 1:
-                            parent_node.index = parent_node.index  # +2
-                        if node.index > 1:
-                            node.index = node.index  # +2
                         self.add_node_with_parent(node, parent_node)
 
             # IF 3-point soma representation
             elif self.soma_type == 1:
                 for index, (swc_type, node, parent_index) in all_nodes.items():
-                    if index == 1:
-                        # print "Set soma -- 3 point soma"
-                        self.root = node
-                    elif index in (2, 3):
-                        # the 3-point soma representation
-                        # (http://neuromorpho.org/neuroMorpho/SomaFormat.html)
-                        self.add_node_with_parent(node, self.root)
+                    if parent_index < 0:
+                        # Root has already been set above
+                        pass
                     else:
                         parent_node = all_nodes[parent_index][1]
                         self.add_node_with_parent(node, parent_node)
             # IF multiple cylinder soma representation
             elif self.soma_type == 2:
-                self.root = all_nodes[1][1]
+                # Root has already been set above
 
                 # get all some info
                 soma_cylinders = []
                 connected_to_root = []
                 for index, (swc_type, node, parent_index) in all_nodes.items():
-                    if swc_type == 1 and not index == 1:
+                    if swc_type == 1 and parent_index > 0:
                         soma_cylinders.append((node, parent_index))
-                        if index > 1:
-                            connected_to_root.append(index)
+                        connected_to_root.append(index)
 
                 # make soma
                 s_node_1, s_node_2 = self._make_soma_from_cylinders(soma_cylinders,
                                                                     all_nodes)
 
                 # add soma
-                self.root = all_nodes[1][1]
                 self.root.content["p3d"].radius = s_node_1.content["p3d"].radius
                 self.add_node_with_parent(s_node_1, self.root)
                 self.add_node_with_parent(s_node_2, self.root)

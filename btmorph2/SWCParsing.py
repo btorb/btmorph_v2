@@ -154,7 +154,7 @@ class SWCParsing(object):
 
             return 3
 
-    def getSWCDatasetsTypes(self):
+    def getSWCDatasetsTypes(self, correctIfSomaAbsent=False):
 
         swcGraphs = self.checkAndReturnFeasibleGraphsWithTypeLineNumber()
 
@@ -168,6 +168,11 @@ class SWCParsing(object):
                                    x in nx.topological_sort(graph)[1:]]
 
             treeData = self.swcData[treeNodeLineNumbers, :]
+
+            if treeSomaType == 3 and correctIfSomaAbsent:
+
+                treeData[0, 1] = 1
+                treeSomaType = 0
 
             toReturn[treeSomaType] = treeData
 

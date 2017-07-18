@@ -70,6 +70,19 @@ def allSWCImport_test():
                 print(e)
                 assert False
 
+def correctIfSomaAbsentArgument_test():
+    """
+    Tests if setting argument correctifSomaAbsent to True has the
+    expected effect on importing SWC file with NeuronMorphology
+    :return:
+    """
+    swcFile = 'tests/117.v3dpbd/10_117.v3dpbd_ENT_updated.swc'
+
+    NeuronMorphology(swcFile, correctIfSomaAbsent=True)
+
+
+
+
 if __name__ == "__main__":
     # dummyImport()
     allSWCImport_test()
