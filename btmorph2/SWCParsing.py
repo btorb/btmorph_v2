@@ -1,7 +1,7 @@
 import numpy as np
-from auxFuncs import readSWC_numpy, getDuplicates
+from auxFuncs import readSWC_numpy, getDuplicates, writeSWC_numpy
 import networkx as nx
-
+import pathlib2
 
 
 class SWCParsing(object):
@@ -68,8 +68,10 @@ class SWCParsing(object):
             parentID = int(row[6])
 
             allGraphMulti.add_node(n=index, type=nodeType, lineNumber=lineNumber)
-            allGraphMulti.add_node(n=parentID)
-            allGraphMulti.add_edge(u=parentID, v=index)
+
+            if parentID > 0:
+                allGraphMulti.add_node(n=parentID)
+                allGraphMulti.add_edge(u=parentID, v=index)
 
         duplicateEdges = getDuplicates(allGraphMulti.edges())
 
@@ -105,10 +107,7 @@ class SWCParsing(object):
 
         assert len(rootNodes) == 1, "graph has more than one roots"
 
-        rootParent = rootNodes[0]
-
-        rootNode = graph.successors(rootParent)[0]
-
+        rootNode = rootNodes[0]
 
         if graph.node[rootNode]["type"] == 1:
 
@@ -154,6 +153,7 @@ class SWCParsing(object):
 
             return 3
 
+
     def getSWCDatasetsTypes(self, correctIfSomaAbsent=False):
 
         swcGraphs = self.checkAndReturnFeasibleGraphsWithTypeLineNumber()
@@ -165,7 +165,7 @@ class SWCParsing(object):
             treeSomaType = self.determine_soma_type(graph)
 
             treeNodeLineNumbers = [graph.node[x]["lineNumber"] for
-                                   x in nx.topological_sort(graph)[1:]]
+                                   x in nx.topological_sort(graph)]
 
             treeData = self.swcData[treeNodeLineNumbers, :]
 
@@ -177,6 +177,11 @@ class SWCParsing(object):
             toReturn[treeSomaType] = treeData
 
         return toReturn
+
+
+
+
+
 
 
 
