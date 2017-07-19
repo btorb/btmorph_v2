@@ -1,5 +1,5 @@
 import numpy as np
-from auxFuncs import readSWC_numpy, getDuplicates, writeSWC_numpy
+from .auxFuncs import readSWC_numpy, getDuplicates, writeSWC_numpy
 import networkx as nx
 import pathlib2
 

@@ -5,6 +5,7 @@ Test routines for the btstructs.py file
 from btmorph2 import NeuronMorphology
 import numpy as np
 from nose.tools import with_setup
+import os
 
 
 def test_soma_type_3ps():
@@ -65,10 +66,14 @@ def test_load_and_write_swc():
     '''
     Test whether SWC trees are correctly written to file
     '''
+
+    expectedOutput = 'tests/moto_1_outputted.swc'
+    if os.path.isfile(expectedOutput):
+        os.remove(expectedOutput)
     swc_neuron1 = NeuronMorphology('tests/v_e_moto1.CNG.swc')
-    swc_neuron1.tree.write_SWC_tree_to_file('tests/moto_1_outputted.swc')
+    swc_neuron1.tree.write_SWC_tree_to_file(expectedOutput)
     swc_neuron2 = NeuronMorphology('tests/moto_1_outputted.swc')
-    print(('len(swc_neuron2)', len(swc_neuron2.tree.get_nodes())))
+    print('len(swc_neuron2)', len(swc_neuron2.tree.get_nodes()))
 
     assert(len(swc_neuron2.tree.get_nodes()) == 562)
 
@@ -410,3 +415,27 @@ def teardown_func_small_tree_lac():
     """
     global test_neurons
     test_neurons = []
+
+
+def breadth_first_iterator_test():
+    """
+    Testing Breadth first iterator generator
+    """
+
+    swcFile = "tests/horton-strahler_test_wiki.swc"
+    nrn = NeuronMorphology(swcFile)
+    bfsInds = [node.index for node in nrn.tree.breadth_first_iterator_generator()]
+    assert bfsInds == [1, 21, 22, 2, 3, 4, 5, 12, 6, 9, 13, 14, 7, 8, 10, 11, 15, 18, 16, 17, 19, 20]
+
+
+def depth_first_iterator_test():
+    """
+    Testing Depth first iterator generator
+    """
+
+    swcFile = "tests/horton-strahler_test_wiki.swc"
+    nrn = NeuronMorphology(swcFile)
+    dfsInds = [node.index for node in nrn.tree.depth_first_iterator_generator()]
+    assert dfsInds == [1, 2, 4, 12, 14, 18, 20, 19, 15, 17, 16, 13, 5, 9, 11, 10, 6, 8, 7, 3, 22, 21]
+
+

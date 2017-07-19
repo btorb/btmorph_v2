@@ -24,7 +24,8 @@ from .SWCParsing import SWCParsing
 from tempfile import mkdtemp
 import shutil
 import pathlib2
-from .auxFuncs import readSWC_numpy
+from .auxFuncs import readSWC_numpy, writeSWC_numpy
+from Queue import Queue, LifoQueue
 
 class PopulationMorphology(object):
 
@@ -33,8 +34,6 @@ class PopulationMorphology(object):
 
     List of neurons for statistical comparison, no visualisation methods
     '''
-    
-    neurons = []
     
     def __init__(self, obj, correctIfSomaAbsent=False):
         """
@@ -51,6 +50,8 @@ class PopulationMorphology(object):
             if True, then for trees whose roots are not of type 1, the roots are
             manually set to be of type 1 and treated as they have one point soma.
         """
+
+        self.neurons = []
 
         if isinstance(obj, NeuronMorphology):
             self.add_neuron(obj)
@@ -1865,6 +1866,42 @@ class Tree(object):
         if from_node.parent is not None:
             self._go_up_from_until(from_node.parent, to_node, n)
 
+    def breadth_first_iterator_generator(self):
+        """
+        Generator function to produce an iterator that traverses breadth first through nodes of the tree.
+        Ex. [x for x in tree.breadth_first_iterator_generator] produces a list of nodes in breadth-first
+        traversal order
+        """
+
+        nodeQ = Queue()
+
+        nodeQ.put(self.root)
+
+        while not nodeQ.empty():
+
+            node = nodeQ.get()
+            for child in node.children:
+                nodeQ.put(child)
+            yield node
+
+    def depth_first_iterator_generator(self):
+        """
+        Generator function to produce an iterator that traverses depth first through nodes of the tree.
+        Ex. [x for x in tree.breadth_first_iterator_generator] produces a list of nodes in breadth-first
+        traversal order
+        """
+
+        nodeQ = LifoQueue()
+
+        nodeQ.put(self.root)
+
+        while not nodeQ.empty():
+
+            node = nodeQ.get()
+            for child in node.children:
+                nodeQ.put(child)
+            yield node
+
     def read_SWC_tree_from_file(self, input_file, types=range(1, 10), correctIfSomaAbsent=False):
 
         """
@@ -2016,7 +2053,7 @@ class Tree(object):
 
             return self
 
-    def write_SWC_tree_to_file(self, input_file):
+    def write_SWC_tree_to_file(self, output_file):
 
         """
         Non-specific for a tree.
@@ -2026,44 +2063,27 @@ class Tree(object):
 
          Parameters
         -----------
-        input_file : :class:`str`
+        output_file : :class:`str`
             File name to write SWC to
 
         """
-        writer = open(input_file, 'w')
-        nodes = self.get_nodes()
-        nodes.sort()
+        swcData = []
 
-        # 3 point soma representation (See Neuromoprho.org FAQ)
-        s1p = nodes[0].content["p3d"]
-        s1_xyz = s1p.xyz
-        s2p = nodes[1].content["p3d"]
-        s2_xyz = s2p.xyz
-        s3p = nodes[2].content["p3d"]
-        s3_xyz = s3p.xyz
-        soma_str = "1 1 " + str(s1_xyz[0]) + " " + str(s1_xyz[1]) + \
-                   " " + str(s1_xyz[2]) + " " + str(s1p.radius) + " -1\n" + \
-                   "2 1 " + str(s2_xyz[0]) + " " + str(s2_xyz[1]) + \
-                   " " + str(s2_xyz[2]) + " " + str(s2p.radius) + " 1\n" + \
-                   "3 1 " + str(s3_xyz[0]) + " " + str(s3_xyz[1]) + \
-                   " " + str(s3_xyz[2]) + " " + str(s3p.radius) + " 1\n"
-        writer.write(soma_str)
-        writer.flush()
-
-        # add the soma compartment, then enter the loop
-        for node in nodes[3:]:
-            p3d = node.content['p3d']  # update 2013-03-08
-            xyz = p3d.xyz
+        for node in self.breadth_first_iterator_generator():
+            index = node.index
+            p3d = node.content["p3d"]
+            nodeType = p3d.segtype
+            x, y, z = p3d.xyz
             radius = p3d.radius
-            tt = p3d.segtype
-            p3d_string = (str(node.index)+' '+str(tt) + ' ' + str(xyz[0]) +
-                          ' ' + str(xyz[1]) + ' ' + str(xyz[2]) +
-                          ' ' + str(radius) + ' ' + str(node.parent.index))
-            # print 'p3d_string: ', p3d_string
-            writer.write(p3d_string + '\n')
-            writer.flush()
-        writer.close()
-        # print 'STree::writeSWCTreeToFile -> finished. Tree in >',fileN,'<'
+            parent = node.parent
+            if parent is None:
+                parentIndex = -1
+            else:
+                parentIndex = parent.index
+
+            swcData.append([index, nodeType, x, y, z, radius, parentIndex])
+
+        writeSWC_numpy(output_file, swcData)
 
     def _make_soma_from_cylinders(self, soma_cylinders, all_nodes):
 
