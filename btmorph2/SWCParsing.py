@@ -178,6 +178,28 @@ class SWCParsing(object):
 
         return toReturn
 
+    def getTreesAsFiles(self, tmpDir):
+
+        dirPath = pathlib2.Path(tmpDir)
+
+        swcGraphs = self.checkAndReturnFeasibleGraphsWithTypeLineNumber()
+
+        treeFileNames = []
+
+        for graphInd, graph in enumerate(swcGraphs):
+
+            treeNodeLineNumbers = [graph.node[x]["lineNumber"] for
+                                   x in nx.topological_sort(graph)]
+
+            treeData = self.swcData[treeNodeLineNumbers, :]
+
+            tempFile = str(dirPath / "{:02d}.swc".format(graphInd))
+            writeSWC_numpy(tempFile, treeData)
+
+            treeFileNames.append(tempFile)
+
+        return treeFileNames
+
 
 
 

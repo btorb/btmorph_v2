@@ -1,5 +1,13 @@
 from btmorph2.SWCParsing import SWCParsing
 
+def testCC():
+    """
+    Test if connected components are being detected properly
+    """
+
+    swcFile = "tests/117.v3dpbd/03_117.v3dpbd_NeuroGPSTree.swc"
+    temp = SWCParsing(swcFile)
+    assert temp.numberOfTrees() == len(temp.checkAndReturnFeasibleGraphsWithTypeLineNumber())
 
 def test_soma_type_3ps():
     """

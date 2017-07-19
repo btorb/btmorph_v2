@@ -21,8 +21,10 @@ from .btviz import animate
 from .btviz import plot_dendrogram
 from numpy import mean, cov, dot, linalg, transpose
 from .SWCParsing import SWCParsing
-
-
+from tempfile import mkdtemp
+import shutil
+import pathlib2
+from .auxFuncs import readSWC_numpy
 
 class PopulationMorphology(object):
 
@@ -34,7 +36,7 @@ class PopulationMorphology(object):
     
     neurons = []
     
-    def __init__(self, obj):
+    def __init__(self, obj, correctIfSomaAbsent=False):
         """
         Default constructor.
 
@@ -45,34 +47,57 @@ class PopulationMorphology(object):
             SWC files. If obj is NeuronMorphology then Population will be
             create with NeuronMorphology, if List of NeuronMorphology then 
             population will be created with that list
+        correctIfSomaAbsent: bool
+            if True, then for trees whose roots are not of type 1, the roots are
+            manually set to be of type 1 and treated as they have one point soma.
         """
 
-        try:
-            if isinstance(obj, NeuronMorphology):
-                self.add_neuron(obj)
+        if isinstance(obj, NeuronMorphology):
+            self.add_neuron(obj)
 
-            elif isinstance(obj, str):
-                from os import listdir
-                from os.path import isfile, isdir, join
+        elif isinstance(obj, str):
+            from os import listdir
+            from os.path import isfile, isdir, join
 
-                if isdir(obj):
-                    files = [f for f in listdir(obj) if (isfile(join(obj, f)) 
-                                                         and
-                                                         f.endswith('.swc'))]
-                    for f in files:
-                        n = NeuronMorphology(input_file=join(obj, f))
+            if isdir(obj):
+                files = [f for f in listdir(obj) if (isfile(join(obj, f))
+                                                     and
+                                                     f.endswith('.swc'))]
+                for f in files:
+                    nms = self.parseSWCFile2NM(join(obj, f), correctIfSomaAbsent=correctIfSomaAbsent)
+
+                    for n in nms:
                         self.add_neuron(n)
-                if isfile(obj) and obj.endswith(".swc"):
-                    n = NeuronMorphology(input_file=join(obj))
+            if isfile(obj) and obj.endswith(".swc"):
+                nms = self.parseSWCFile2NM(obj, correctIfSomaAbsent=correctIfSomaAbsent)
+
+                for n in nms:
                     self.add_neuron(n)
 
-            elif isinstance(obj, list):
-                if isinstance(obj[0], NeuronMorphology):
-                    for n in obj:
-                        self.add_neuron(n)
+        elif isinstance(obj, list):
+            if isinstance(obj[0], NeuronMorphology):
+                for n in obj:
+                    self.add_neuron(n)
 
-        except:
+        else:
             print("Object is not valid type")
+
+    @staticmethod
+    def parseSWCFile2NM(swcFile, correctIfSomaAbsent):
+
+        swcP = SWCParsing(swcFile)
+        tmpDir = mkdtemp()
+        files = swcP.getTreesAsFiles(tmpDir)
+
+        NMs = []
+        for f in files:
+            n = NeuronMorphology(input_file=f,
+                                 correctIfSomaAbsent=correctIfSomaAbsent)
+            NMs.append(n)
+
+        shutil.rmtree(tmpDir)
+
+        return NMs
 
     def add_neuron(self, neuron):
         self.neurons.append(neuron)
@@ -145,6 +170,31 @@ class PopulationMorphology(object):
             for n in self.neurons:
                 result.append(n.get_diameters())
         return result
+
+    def write_to_SWC_file(self, outFile):
+
+        tmpDir = mkdtemp()
+        tmpDirPath = pathlib2.Path(tmpDir)
+
+        with open(outFile, 'w') as outFileObj:
+            currentMax = 0
+            for nInd, n in enumerate(self.neurons):
+
+                tmpFle = str(tmpDirPath / "{:02d}.swc".format(nInd))
+
+                n.tree.write_SWC_tree_to_file(tmpFle)
+
+                headr, swcData = readSWC_numpy(tmpFle)
+
+                swcData[:, 0] += currentMax
+                swcData[1:, 6] += currentMax
+
+                currentMax = swcData[:, 0].max()
+
+                for row in swcData:
+                    outFileObj.write('{:.0f} {:.0f} {:0.6f} {:0.6f} {:0.6f} {:0.6f} {:.0f}\n'.format(*row[:7]))
+
+        shutil.rmtree(tmpDir)
 
 
 class NeuronMorphology(object):
@@ -1366,7 +1416,7 @@ class Tree(object):
         Parameters
         -----------
         input_file : :class:`str`
-            File name of neuron to be created,
+            File name of neuron to be created
         axis_config: tuple of len 3
             Specifying the column indices at which the x, y and z coordinates
             are to be expected respectively.

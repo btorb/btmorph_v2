@@ -3,7 +3,6 @@ from collections import Counter
 
 # **********************************************************************************************************************
 
-
 def readSWC_numpy(swcFile):
     '''
     Read the return the header and matrix data in a swcFile

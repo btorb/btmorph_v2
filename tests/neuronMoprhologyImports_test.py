@@ -4,7 +4,7 @@ import os
 
 def dummyImport():
 
-    swcFile = "tests/117.v3dpbd/16_117.v3dpbd_EnsembleNeuronTracerV2n.swc"
+    swcFile = "tests/117.v3dpbd/03_117.v3dpbd_NeuroGPSTree.swc"
     NeuronMorphology(swcFile)
 
 def allSWCImport_test():
@@ -78,11 +78,12 @@ def correctIfSomaAbsentArgument_test():
     """
     swcFile = 'tests/117.v3dpbd/10_117.v3dpbd_ENT_updated.swc'
 
-    NeuronMorphology(swcFile, correctIfSomaAbsent=True)
+    nrn = NeuronMorphology(swcFile, correctIfSomaAbsent=True)
+    assert nrn.tree.soma_type == 0
 
 
 
 
 if __name__ == "__main__":
-    # dummyImport()
-    allSWCImport_test()
+    dummyImport()
+    # allSWCImport_test()
