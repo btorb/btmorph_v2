@@ -62,3 +62,73 @@ def getDuplicates(mylist):
     """
 
     return [k for k, v in Counter(mylist).items() if v > 1]
+
+# **********************************************************************************************************************
+
+def transSWC(fName, A, b, destFle):
+    '''
+    Generate an SWC file at destFle with each point `x' of the morphology in fName transformed Affinely as Ax+b
+    :param fName: string
+    :param A: 2D numpy.ndarray of shape (3, 3)
+    :param b: 3 member iterable
+    :param destFle: string
+    :return:
+    '''
+
+    headr = ''
+    with open(fName, 'r') as fle:
+        lne = fle.readline()
+        while lne[0] == '#':
+            headr = headr + lne[1:]
+            lne = fle.readline()
+
+    data = np.loadtxt(fName)
+    data[:, 2:5] = np.dot(A, data[:, 2:5].T).T + np.array(b)
+
+    if data.shape[1] == 7:
+        formatStr = '%d %d %0.3f %0.3f %0.3f %0.3f %d'
+    elif data.shape[1] == 8:
+        formatStr = '%d %d %0.3f %0.3f %0.3f %0.3f %d %d'
+    else:
+        raise(TypeError('Data in the input file is of unknown format.'))
+
+    np.savetxt(destFle, data, header=headr, fmt=formatStr)
+
+#***********************************************************************************************************************
+
+
+def transSWC_rotAboutPoint(fName, A, b, destFle, point):
+    '''
+    Generate an SWC file at destFle with each point `x' of the morphology in fName transformed Affinely as A(x-mu)+b
+    where mu is a specified point.
+    Essentially, the morphology is centered at a specified point before being Affinely transformed.
+    :param fName: string
+    :param A: 2D numpy.ndarray of shape (3, 3)
+    :param b: 3 member iterable
+    :param destFle: string
+    :param point: 3 member iterable
+    :return:
+    '''
+
+    headr = ''
+    with open(fName, 'r') as fle:
+        lne = fle.readline()
+        while lne[0] == '#':
+            headr = headr + lne[1:]
+            lne = fle.readline()
+
+    data = np.loadtxt(fName)
+    pts = data[:, 2:5]
+    rotAbout = np.array(point)
+    ptsCentered = pts - rotAbout
+    data[:, 2:5] = np.dot(A, ptsCentered.T).T + np.array(b) + rotAbout
+
+    if data.shape[1] == 7:
+        formatStr = '%d %d %0.3f %0.3f %0.3f %0.3f %d'
+    elif data.shape[1] == 8:
+        formatStr = '%d %d %0.3f %0.3f %0.3f %0.3f %d %d'
+    else:
+        raise(TypeError('Data in the input file is of unknown format.'))
+
+    np.savetxt(destFle, data, header=headr, fmt=formatStr)
+#***********************************************************************************************************************

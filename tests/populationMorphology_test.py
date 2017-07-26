@@ -1,7 +1,8 @@
 from btmorph2 import PopulationMorphology
-import tempfile
 import os
 import filecmp
+from btmorph2.transforms import compose_matrix
+import numpy as np
 
 def dummyImport():
 
@@ -53,10 +54,32 @@ def multiTreeSWC_write_read_test():
 
     assert sorted(nodesCount) == sorted(nodesCount1)
 
+def affineTransform_test():
+    """
+    Testing affine transform function of Population Morphology
+    """
+
+    affineTransformMatrix = compose_matrix(scale=(0.8, 1.2, 0.95),
+                                           translate=(-10, 5, 4),
+                                           angles=np.deg2rad((15, -6, -30)))
+    testFile = "tests/transTest/22_117.v3dpbd_Rayshooting.swc"
+    expectedOP = "tests/transTest/22_117.v3dpbd_Rayshooting_trans.swc"
+
+    pm = PopulationMorphology(testFile, correctIfSomaAbsent=True)
+    newPM = pm.affineTransform(affineTransformMatrix)
+
+    testOP = "tests/transTest/22_117.v3dpbd_Rayshooting_testOutput.swc"
+    if os.path.isfile(testOP):
+        os.remove(testOP)
+    newPM.write_to_SWC_file(testOP)
+    assert filecmp.cmp(testOP, expectedOP)
+
+
+
 if __name__ == "__main__":
 
     # dummyImport()
     # multiTreeSWCImport_test()
     # multiTreeSWC_write()
-    multiTreeSWC_write_read_test()
-
+    # multiTreeSWC_write_read_test()
+    affineTransform_test()

@@ -24,8 +24,9 @@ from .SWCParsing import SWCParsing
 from tempfile import mkdtemp
 import shutil
 import pathlib2
-from .auxFuncs import readSWC_numpy, writeSWC_numpy
+from .auxFuncs import readSWC_numpy, writeSWC_numpy, transSWC
 from Queue import Queue, LifoQueue
+from tempfile import TemporaryFile
 
 class PopulationMorphology(object):
 
@@ -196,6 +197,18 @@ class PopulationMorphology(object):
                     outFileObj.write('{:.0f} {:.0f} {:0.6f} {:0.6f} {:0.6f} {:0.6f} {:.0f}\n'.format(*row[:7]))
 
         shutil.rmtree(tmpDir)
+
+    def affineTransform(self, affineTransformMatrix):
+        """
+        returns a copy of the Population Morphology with each of its neurons transformed by 
+        affineTransformMatrix
+        :param affineTransformMatrix: numpy.ndarray of shape (4, 4) 
+        :return: Population Morphology
+        """
+
+        newNMs = [x.affineTransform(affineTransformMatrix) for x in self.neurons]
+        newPM = PopulationMorphology(newNMs)
+        return newPM
 
 
 class NeuronMorphology(object):
@@ -1399,6 +1412,17 @@ class NeuronMorphology(object):
                     maxv[i] = xyz[i]
         return minv, maxv
 
+    def affineTransform(self, affineTransformationMatrix):
+        """
+        Returns a copy of self that is transformed by affineTransformMatrix
+        :param affineTransformationMatrix: numpy.ndarray of shape (4, 4)
+        :return: Neuron Morphology
+        """
+
+        newNM = NeuronMorphology()
+        newNM.tree = self.tree.affineTransformTree(affineTransformationMatrix)
+        return newNM
+
 
 class Tree(object):
     '''
@@ -2218,6 +2242,23 @@ class Tree(object):
         import os
         os.remove('tmpTree_3d_' + now + '.swc')
         return self
+
+    def affineTransformTree(self, affineTransformMatrix):
+        """
+        Returns a copy with affineTransformMatrix applied to each node of the tree.
+        :param affineTransformMatrix: np.ndarray of shape (4, 4)
+        :return: new transformed Neuron Morphology
+        """
+
+        tempSWC = TemporaryFile(mode="rw")
+        self.write_SWC_tree_to_file(tempSWC.name)
+
+        transTempSWC = TemporaryFile(mode="rw")
+
+        transSWC(tempSWC.name, affineTransformMatrix[:3, :3],
+                 affineTransformMatrix[:3, 3], transTempSWC.name)
+
+        return Tree(transTempSWC.name)
 
     def __iter__(self):
 
