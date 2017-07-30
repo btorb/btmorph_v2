@@ -1,3 +1,9 @@
+from __future__ import division
+from __future__ import print_function
+from builtins import str
+from builtins import range
+from builtins import object
+from past.utils import old_div
 import OpenGL
 import OpenGL.GL as GL
 import OpenGL.GLU as GLU
@@ -14,7 +20,7 @@ import numpy
 OpenGL.USE_FREEGLUT = True
 
 
-class tickScaler:
+class tickScaler(object):
     def __init__(self, minv, maxv):
         self.maxTicks = 6
         self.tickSpacing = 0
@@ -29,13 +35,13 @@ class tickScaler:
     def calculate(self):
         if not self.maxPoint == self.minPoint:
             self.lst = self.niceNum(self.maxPoint - self.minPoint, False)
-            self.tickSpacing = self.niceNum(self.lst /
-                                            (self.maxTicks - 1), True)
-            self.niceMin = math.floor(self.minPoint /
-                                      self.tickSpacing) * self.tickSpacing
-            self.niceMax = math.ceil(self.maxPoint /
-                                     self.tickSpacing) * self.tickSpacing
-            self.noTicks = (self.niceMax - self.niceMin) / self.tickSpacing
+            self.tickSpacing = self.niceNum(old_div(self.lst,
+                                            (self.maxTicks - 1)), True)
+            self.niceMin = math.floor(old_div(self.minPoint,
+                                      self.tickSpacing)) * self.tickSpacing
+            self.niceMax = math.ceil(old_div(self.maxPoint,
+                                     self.tickSpacing)) * self.tickSpacing
+            self.noTicks = old_div((self.niceMax - self.niceMin), self.tickSpacing)
         else:
             self.lst = 0
             self.tickSpacing = 0
@@ -48,7 +54,7 @@ class tickScaler:
         niceFraction = 0  # nice, rounded fraction */
 
         exponent = math.floor(math.log10(self.lst))
-        fraction = self.lst / math.pow(10, exponent)
+        fraction = old_div(self.lst, math.pow(10, exponent))
 
         if (self.lst):
             if (fraction < 1.5):
@@ -81,7 +87,7 @@ class tickScaler:
         self.calculate()
 
 
-class camera:
+class camera(object):
 
     forward = False
     backward = False
@@ -113,7 +119,7 @@ class camera:
         self.movementspeed = 0.01
 
     def toRadian(self, angle):
-        return angle * (n.pi / 180)
+        return angle * (old_div(n.pi, 180))
 
     def moveFocus(self):
         if(self.forward and not self.backward and not
@@ -156,7 +162,7 @@ class camera:
         return [cx, cy, cz]
 
 
-class graphbuilder:
+class graphbuilder(object):
     Graph = None
 
     niceScaleArr = None
@@ -442,12 +448,12 @@ class graphbuilder:
             last[edges.index(e)] = [i1, i2, i3]
 
         s = s + 0.5
-        xyzOff = [self.scale(self.niceScaleArr[0].tickSpacing,
-                  self.scalefactor) / 2,
-                  self.scale(self.niceScaleArr[1].tickSpacing,
-                  self.scalefactor) / 2,
-                  self.scale(self.niceScaleArr[2].tickSpacing,
-                  self.scalefactor) / 2]
+        xyzOff = [old_div(self.scale(self.niceScaleArr[0].tickSpacing,
+                  self.scalefactor), 2),
+                  old_div(self.scale(self.niceScaleArr[1].tickSpacing,
+                  self.scalefactor), 2),
+                  old_div(self.scale(self.niceScaleArr[2].tickSpacing,
+                  self.scalefactor), 2)]
 
         if not first[0] == corner:
             self.billboardLabel([first[0][0] - xyzOff[0],
@@ -476,10 +482,10 @@ class graphbuilder:
                                  last[2][2] + xyzOff[2]], 40, 0, s)
 
     def scale3d(self, value, factor):
-        return [(value[0] / factor), (value[1] / factor), (value[2] / factor)]
+        return [(old_div(value[0], factor)), (old_div(value[1], factor)), (old_div(value[2], factor))]
 
     def scale(self, value, factor):
-        return value / factor
+        return old_div(value, factor)
 
     def billboardLabel(self, objPos, character, offset, scale):
 
@@ -516,7 +522,7 @@ class graphbuilder:
         GL.glDisable(GL.GL_BLEND)
 
     def toRadian(self, angle):
-        return angle * (n.pi / 180)
+        return angle * (old_div(n.pi, 180))
 
     def LoadFontImage(self):
         im = Image.open("res/font_0.png").convert("RGBA")
@@ -588,7 +594,7 @@ class graphbuilder:
         for loop in range(0, 69):
 
             getcontext().prec = 6
-            c = (Decimal(1) / Decimal(256))
+            c = (old_div(Decimal(1), Decimal(256)))
             cx = c * Decimal(int(x[loop]))
             cy = c * Decimal(int(y[loop]))
             cxw = cx + (c * Decimal(int(self.w[loop])))
@@ -781,10 +787,10 @@ class graphbuilder:
         return [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
 
     def vecDiv(self, a, b):
-        return [a[0] / b, a[1] / b, a[2] / b]
+        return [old_div(a[0], b), old_div(a[1], b), old_div(a[2], b)]
 
 
-class modelbuilder:
+class modelbuilder(object):
 
     index = None
     lists = []
@@ -950,10 +956,10 @@ class modelbuilder:
                 GLE.glePolyCone(point_array, colour_array, radius_array)
 
     def scale(self, value, factor):
-        return value / factor
+        return old_div(value, factor)
 
 
-class btvizGL:
+class btvizGL(object):
     running = True
 
     leftMouseDown = False
@@ -1116,7 +1122,7 @@ class btvizGL:
 
         if height == 0:
             height = 1
-        aspect = width / height
+        aspect = old_div(width, height)
 
         GL.glViewport(0, 0, width, height)
         GL.glMatrixMode(GL.GL_PROJECTION)

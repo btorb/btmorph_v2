@@ -3,6 +3,7 @@ import os
 import filecmp
 from btmorph2.transforms import compose_matrix
 import numpy as np
+from builtins import str
 
 def dummyImport():
 
@@ -87,7 +88,7 @@ def emptyPM_test():
 if __name__ == "__main__":
 
     # dummyImport()
-    # multiTreeSWCImport_test()
+    multiTreeSWCImport_test()
     # multiTreeSWC_write()
     # multiTreeSWC_write_read_test()
-    affineTransform_test()
+    # affineTransform_test()

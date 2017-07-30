@@ -1,3 +1,4 @@
+from __future__ import print_function
 from btmorph2.btstructs import NeuronMorphology
 import os
 
@@ -15,7 +16,7 @@ def allSWCImport_test():
 
     swcFiles = []
 
-    for dirPath, dirNames, fileNames in os.walk("tests"):
+    for dirPath, dirNames, fileNames in os.walk("tests/117.v3dpbd"):
 
         swcFiles += [os.path.join(dirPath, fileName)
                      for fileName in fileNames if fileName.endswith(".swc")]
@@ -44,7 +45,7 @@ def allSWCImport_test():
             ]:
                 print(e)
                 assert type(e) is NotImplementedError and \
-                       e.message == "No Soma Found for {}".format(swcFile)
+                       str(e) == "No Soma Found for {}".format(swcFile)
             elif swcFile in [
                 "tests/117.v3dpbd/03_117.v3dpbd_NeuroGPSTree.swc",
                 "tests/117.v3dpbd/08_117.v3dpbd_neutube_updated.swc",
@@ -56,15 +57,15 @@ def allSWCImport_test():
                 ]:
                 print(e)
                 assert type(e) is ValueError and \
-                       e.message == "Given SWC File {} has more than one trees".format(swcFile)
+                       str(e) == "Given SWC File {} has more than one trees".format(swcFile)
 
             elif swcFile in [
                 "tests/117.v3dpbd/16_117.v3dpbd_EnsembleNeuronTracerV2n.swc",
                 "tests/117.v3dpbd/17_117.v3dpbd_EnsembleNeuronTracerV2s.swc"
                 ]:
                 print(e)
-                assert type(e) is AssertionError and  \
-                       e.message == "File {} has cyclic connections!".format(swcFile)
+                assert type(e) is AssertionError and \
+                       str(e) == "File {} has cyclic connections!".format(swcFile)
 
             else:
                 print(e)
@@ -85,5 +86,5 @@ def correctIfSomaAbsentArgument_test():
 
 
 if __name__ == "__main__":
-    dummyImport()
-    # allSWCImport_test()
+    # dummyImport()
+    allSWCImport_test()

@@ -5,7 +5,12 @@ File contains:
 
 Irina Reshodko
 """
+from __future__ import division
 
+from builtins import str
+from builtins import range
+from builtins import object
+from past.utils import old_div
 import numpy as np
 import matplotlib.pyplot as plt
 import math
@@ -92,7 +97,7 @@ class VoxelGrid(object):
         self.dim = VoxelGrid.adjust_dimensions(dimensions, resolution)
         self.res = resolution
         self.grid = {}
-        self.dV = self.dim[0]/float(self.res[0])
+        self.dV = old_div(self.dim[0],float(self.res[0]))
         self.encompassingBox = [[], [], []]
         self.encompassingBox[0] = [self.res[0], 0]
         self.encompassingBox[1] = [self.res[1], 0]
@@ -172,7 +177,7 @@ class VoxelGrid(object):
         """
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
-        keys = self.grid.keys()
+        keys = list(self.grid.keys())
         xs, ys, zs = [], [], []
         for coords in keys:
             xs.append(coords[0])
@@ -203,7 +208,7 @@ class VoxelGrid(object):
             return [(c[0], c[0]), (c[1], c[1]), (c[2], c[2])]
         ranges = [0, 0, 0]
         for i in range(0,3):
-            ranges[i] = (int(round((center[i] - radius)/self.dV)), int(round((center[i] + radius)/self.dV)))
+            ranges[i] = (int(round(old_div((center[i] - radius),self.dV))), int(round(old_div((center[i] + radius),self.dV))))
             if ranges[i][0] > self.res[i] and ranges[i][1] > self.res[i] or ranges[i][0] < 0 and ranges[i][1] < 0:
                 return None
             ranges[i]= (max(ranges[i][0], 0), min(ranges[i][1], self.res[i]))
@@ -265,13 +270,13 @@ class VoxelGrid(object):
         if abs_p == 0 or point == a:
             return True
         abs_a = math.sqrt(a[0]**2 + a[1]**2 + a[2]**2)
-        n = (a[0]/abs_a, a[1]/abs_a, a[2]/abs_a)
+        n = (old_div(a[0],abs_a), old_div(a[1],abs_a), old_div(a[2],abs_a))
         dot_pn = point[0]*n[0] + point[1]*n[1] + point[2]*n[2]        
         l = dot_pn
         if l < 0 or l > abs_a:
             return False
         epsilon = 0.0001
-        c = dot_pn/abs_p
+        c = old_div(dot_pn,abs_p)
         if abs(c - 1) < epsilon or abs(c + 1) < epsilon:
             c = 1.0
         s = math.sqrt(1 - c**2)
@@ -313,9 +318,9 @@ class VoxelGrid(object):
         rangeX = (max(min(x1 - r1, x2 - r2), 0), min(max(x1 + r1, x2 + r2), self.dim[0]))
         rangeY = (max(min(y1 - r1, y2 - r2), 0), min(max(y1 + r1, y2 + r2), self.dim[1]))
         rangeZ = (max(min(z1 - r1, z2 - r2), 0), min(max(z1 + r1, z2 + r2), self.dim[2]))
-        rangeX = (int(round(rangeX[0] / self.dV)), int(round(rangeX[1] / self.dV)))
-        rangeY = (int(round(rangeY[0] / self.dV)), int(round(rangeY[1] / self.dV)))
-        rangeZ = (int(round(rangeZ[0] / self.dV)), int(round(rangeZ[1] / self.dV)))
+        rangeX = (int(round(old_div(rangeX[0], self.dV))), int(round(old_div(rangeX[1], self.dV))))
+        rangeY = (int(round(old_div(rangeY[0], self.dV))), int(round(old_div(rangeY[1], self.dV))))
+        rangeZ = (int(round(old_div(rangeZ[0], self.dV))), int(round(old_div(rangeZ[1], self.dV))))
         return [rangeX, rangeY, rangeZ]
 
     def add_frustum(self, center1, radius1, center2, radius2):
@@ -456,7 +461,7 @@ class VoxelGrid(object):
         """
         if point is None:
             return None
-        return int(round(point[0] / self.dV)), \
-               int(round(point[1] / self.dV)),\
-               int(round(point[2] / self.dV))
+        return int(round(old_div(point[0], self.dV))), \
+               int(round(old_div(point[1], self.dV))),\
+               int(round(old_div(point[2], self.dV)))
 

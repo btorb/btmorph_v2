@@ -1,7 +1,10 @@
 '''
 Test routines for the btstructs.py file
 '''
+from __future__ import division
+from __future__ import print_function
 
+from past.utils import old_div
 from btmorph2 import NeuronMorphology
 import numpy as np
 from nose.tools import with_setup
@@ -47,8 +50,8 @@ def test_NeuronMorphology_multipleTrees():
 
     try:
         nrn = NeuronMorphology(input_file)
-    except ValueError as v:
-        assert v.message == "Given SWC File {} has more than one trees".format(input_file)
+    except ValueError as ve:
+        assert str(ve) == "Given SWC File {} has more than one trees".format(input_file)
 
 def test_load_swc():
     '''
@@ -73,7 +76,7 @@ def test_load_and_write_swc():
     swc_neuron1 = NeuronMorphology('tests/v_e_moto1.CNG.swc')
     swc_neuron1.tree.write_SWC_tree_to_file(expectedOutput)
     swc_neuron2 = NeuronMorphology('tests/moto_1_outputted.swc')
-    print('len(swc_neuron2)', len(swc_neuron2.tree.get_nodes()))
+    print(('len(swc_neuron2)', len(swc_neuron2.tree.get_nodes())))
 
     assert(len(swc_neuron2.tree.get_nodes()) == 562)
 
@@ -176,8 +179,8 @@ def test_terminal_lengths():
     for node in swc_neuron1._end_points:
         term_path_lengths.append(swc_neuron1.get_pathlength_to_root(node))
         term_euclidean_lengths.append(swc_neuron1.get_Euclidean_length_to_root(node))
-        term_contractions.append(term_euclidean_lengths[-1] /
-                                 term_path_lengths[-1])
+        term_contractions.append(old_div(term_euclidean_lengths[-1],
+                                 term_path_lengths[-1]))
     print(('min/max path: %f - %f' % (min(term_path_lengths),
                                      max(term_path_lengths))))
     print(('min/max euclid: %f - %f' % (min(term_euclidean_lengths),
@@ -425,7 +428,7 @@ def breadth_first_iterator_test():
     swcFile = "tests/horton-strahler_test_wiki.swc"
     nrn = NeuronMorphology(swcFile)
     bfsInds = [node.index for node in nrn.tree.breadth_first_iterator_generator()]
-    assert bfsInds == [1, 21, 22, 2, 3, 4, 5, 12, 6, 9, 13, 14, 7, 8, 10, 11, 15, 18, 16, 17, 19, 20]
+    assert bfsInds == [1, 2, 21, 22, 3, 4, 5, 12, 6, 9, 13, 14, 7, 8, 10, 11, 15, 18, 16, 17, 19, 20]
 
 
 def depth_first_iterator_test():
@@ -436,6 +439,8 @@ def depth_first_iterator_test():
     swcFile = "tests/horton-strahler_test_wiki.swc"
     nrn = NeuronMorphology(swcFile)
     dfsInds = [node.index for node in nrn.tree.depth_first_iterator_generator()]
-    assert dfsInds == [1, 2, 4, 12, 14, 18, 20, 19, 15, 17, 16, 13, 5, 9, 11, 10, 6, 8, 7, 3, 22, 21]
+    assert dfsInds == [1, 22, 21, 2, 4, 12, 14, 18, 20, 19, 15, 17, 16, 13, 5, 9, 11, 10, 6, 8, 7, 3]
 
 
+if __name__ == "__main__":
+    test_NeuronMorphology_multipleTrees()

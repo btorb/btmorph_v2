@@ -1,3 +1,9 @@
+from __future__ import division
+from builtins import zip
+from builtins import str
+from builtins import range
+from builtins import object
+from past.utils import old_div
 import numpy as np
 from .auxFuncs import readSWC_numpy, getDuplicates, writeSWC_numpy
 import networkx as nx
@@ -61,7 +67,7 @@ class SWCParsing(object):
 
         allGraphMulti = nx.MultiDiGraph()
 
-        for lineNumber, row in zip(xrange(self.swcData.shape[0]), self.swcData):
+        for lineNumber, row in zip(range(self.swcData.shape[0]), self.swcData):
 
             index = int(row[0])
             nodeType = int(row[1])
@@ -193,7 +199,7 @@ class SWCParsing(object):
 
             treeData = self.swcData[treeNodeLineNumbers, :]
 
-            tempFile = str(dirPath / "{:02d}.swc".format(graphInd))
+            tempFile = str(old_div(dirPath, "{:02d}.swc".format(graphInd)))
             writeSWC_numpy(tempFile, treeData)
 
             treeFileNames.append(tempFile)

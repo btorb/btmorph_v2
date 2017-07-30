@@ -170,6 +170,7 @@ True
 
 from __future__ import division, print_function
 
+from builtins import object
 import math
 
 import numpy

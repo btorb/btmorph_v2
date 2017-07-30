@@ -5,6 +5,10 @@ Usage is restricted to morphologies in the SWC format with the three-point soma 
 
 B. Torben-Nielsen
 """
+from __future__ import division
+from __future__ import print_function
+from builtins import map
+from past.utils import old_div
 import sys,time
 from matplotlib.cm import get_cmap
 sys.setrecursionlimit(10000)
@@ -76,7 +80,7 @@ def plot_2D(neuron, color_scheme="default", color_mapping=None,
         my_color_list = config.c_scheme_default['neurite']
     elif color_scheme == 'neuromorpho':
         my_color_list = config.c_scheme_nm['neurite']
-    print('my_color_list: ', my_color_list)
+    print(('my_color_list: ', my_color_list))
 
     scalarMap = None
     # setting up for a colormap
@@ -120,7 +124,7 @@ def plot_2D(neuron, color_scheme="default", color_mapping=None,
                 if isinstance(color_mapping[0], int):
                     c = scalarMap.to_rgba(color_mapping[index])
                 elif isinstance(color_mapping[0], list):
-                    c = [float(x) / 255 for x in color_mapping[index]]
+                    c = [old_div(float(x), 255) for x in color_mapping[index]]
                 pl = plt.plot([P.content['p3d'].xyz[0], C.content['p3d'].xyz[0]], [P.content['p3d'].xyz[ax], C.content['p3d'].xyz[ax]], c=c , linewidth=line_width, zorder=1)
 
             # add the synapses
@@ -202,7 +206,7 @@ def plot_3D(neuron, color_scheme="default", color_mapping=None,
         my_color_list = config.c_scheme_nm['neurite']
     else:
         raise Exception("Not valid color scheme")
-    print('my_color_list: ', my_color_list)
+    print(('my_color_list: ', my_color_list))
 
     fig, ax = plt.subplots()
 
@@ -240,7 +244,7 @@ def plot_3D(neuron, color_scheme="default", color_mapping=None,
             if show_radius==False:
                 line_width = plot_radius
             else:
-                line_width = c_r/2.0
+                line_width = old_div(c_r,2.0)
 
             if color_mapping is None:
                 ax.plot([p_x, c_x], [p_y, c_y], [p_z, c_z], my_color_list[node.content['p3d'].segtype - 1], linewidth=line_width)
@@ -248,9 +252,9 @@ def plot_3D(neuron, color_scheme="default", color_mapping=None,
                 if isinstance(color_mapping[0], int):
                     c = scalarMap.to_rgba(color_mapping[index])
                 elif isinstance(color_mapping[0], list):
-                    c = [float(x) / 255 for x in color_mapping[index]]
+                    c = [old_div(float(x), 255) for x in color_mapping[index]]
 
-                ax.plot([p_x, c_x], [p_y, c_y], [p_z, c_z], c=c, linewidth=c_r/2.0)
+                ax.plot([p_x, c_x], [p_y, c_y], [p_z, c_z], c=c, linewidth=old_div(c_r,2.0))
             # add the synapses
         if synapses is not None:
             if synapses[index]:
@@ -325,7 +329,7 @@ def animate(neuron, color_scheme="default", color_mapping=None,
         my_color_list = config.c_scheme_nm['neurite']
     else:
         raise Exception("Not valid color scheme")
-    print('my_color_list: ', my_color_list)
+    print(('my_color_list: ', my_color_list))
 
     fig, ax = plt.subplots()
 
@@ -361,14 +365,14 @@ def animate(neuron, color_scheme="default", color_mapping=None,
             # p_r = parent.content['p3d'].radius
             # print 'index:', index, ', len(cs)=', len(color_mapping)
             if color_mapping is None:
-                ax.plot([p_x, c_x], [p_y, c_y], [p_z, c_z], my_color_list[node.content['p3d'].segtype - 1], linewidth=c_r/2.0)
+                ax.plot([p_x, c_x], [p_y, c_y], [p_z, c_z], my_color_list[node.content['p3d'].segtype - 1], linewidth=old_div(c_r,2.0))
             else:
                 if isinstance(color_mapping[0], int):
                     c = scalarMap.to_rgba(color_mapping[index])
                 elif isinstance(color_mapping[0], list):
-                    c = [float(x) / 255 for x in color_mapping[index]]
+                    c = [old_div(float(x), 255) for x in color_mapping[index]]
 
-                ax.plot([p_x, c_x], [p_y, c_y], [p_z, c_z], c=c, linewidth=c_r/2.0)
+                ax.plot([p_x, c_x], [p_y, c_y], [p_z, c_z], c=c, linewidth=old_div(c_r,2.0))
             # add the synapses
         if synapses is not None:
             if synapses[index]:
@@ -435,7 +439,7 @@ def plot_3D_Forest(neurons, color_scheme="default", save_image=None):
         my_color_list = config.c_scheme_nm['neurite']
     else:
         raise Exception("Not valid color scheme")
-    print('my_color_list: ', my_color_list)
+    print(('my_color_list: ', my_color_list))
 
     fig, ax = plt.subplots()
 
@@ -459,7 +463,7 @@ def plot_3D_Forest(neurons, color_scheme="default", save_image=None):
                 # p_r = parent.content['p3d'].radius
                 # print 'index:', index, ', len(cs)=', len(color_mapping)
 
-                ax.plot([p_x, c_x], [p_y, c_y], [p_z, c_z], my_color_list[node.content['p3d'].segtype - 1], linewidth=c_r/2.0)
+                ax.plot([p_x, c_x], [p_y, c_y], [p_z, c_z], my_color_list[node.content['p3d'].segtype - 1], linewidth=old_div(c_r,2.0))
             index += 1
 
     ax.set_xlabel('X')
@@ -512,10 +516,10 @@ def plot_dendrogram(neuron,transform='plain',shift=0,c='k',radius=True,rm=20000.
         plt.ylabel('L (micron)')
     elif(transform == 'lambda') :
         plt.ylabel('L (lambda)')
-    print((time.time() - ttt), ' later the dendrogram was finished. ')
+    print(((time.time() - ttt), ' later the dendrogram was finished. '))
 
     print('max_widht=%f, max_height=%f' % (max_width,max_height))
-    x_bound = (max_width / 2.0) + (0.1*max_width)
+    x_bound = (old_div(max_width, 2.0)) + (0.1*max_width)
     max_y_bound = max_height + 0.1*max_height
     plt.axis([-1.0*x_bound,x_bound,-0.1*max_height,max_y_bound])
 
@@ -536,7 +540,7 @@ def _expand_dendrogram(cNode,swc_tree,off_x,off_y,radius,transform='plain') :
     place_holder_h = H_SPACE
     max_degree = swc_tree.degree_of_node(cNode)
     required_h_space = max_degree * place_holder_h
-    start_x = off_x-(required_h_space/2.0)
+    start_x = off_x-(old_div(required_h_space,2.0))
     if(required_h_space > max_width) :
         max_width = required_h_space
 
@@ -550,7 +554,7 @@ def _expand_dendrogram(cNode,swc_tree,off_x,off_y,radius,transform='plain') :
         r = cChild.content['p3d'].radius
 
         cChild_degree = swc_tree.degree_of_node(cChild)
-        new_off_x = start_x + ( (cChild_degree/2.0)*place_holder_h )
+        new_off_x = start_x + ( (old_div(cChild_degree,2.0))*place_holder_h )
         new_off_y = off_y+(V_SPACE*2)+l
         r = r if radius  else 1
         plt.vlines(new_off_x,off_y+V_SPACE,new_off_y,linewidth=r,colors=C)
@@ -577,7 +581,7 @@ def _path_between(swc_tree,deep,high,transform='plain') :
     if(transform == 'plain'):
         return pl
     elif(transform == 'lambda') :
-        DIAM = (deep.content['p3d'].radius*2.0 + high.content['p3d'].radius*2.0) /2.0 # naive...
-        c_lambda = np.sqrt(1e+4*(DIAM/4.0)*(RM/RA))
-        return pl / c_lambda
+        DIAM = old_div((deep.content['p3d'].radius*2.0 + high.content['p3d'].radius*2.0),2.0) # naive...
+        c_lambda = np.sqrt(1e+4*(old_div(DIAM,4.0))*(old_div(RM,RA)))
+        return old_div(pl, c_lambda)
 

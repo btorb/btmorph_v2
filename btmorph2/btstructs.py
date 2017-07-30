@@ -12,6 +12,15 @@ Daniele Linaro contributed the iterators in  :class:`STree2`.
 Sam Sutton refactored and renamed classes, implemented
     PopulationMorphology and NeuronMorphology
 """
+from __future__ import division
+from __future__ import print_function
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import map
+from builtins import range
+from builtins import object
+from past.utils import old_div
 import sys
 import numpy as np
 
@@ -25,8 +34,9 @@ from tempfile import mkdtemp
 import shutil
 import pathlib2
 from .auxFuncs import readSWC_numpy, writeSWC_numpy, transSWC
-from Queue import Queue, LifoQueue
-from tempfile import TemporaryFile
+from queue import Queue, LifoQueue
+from tempfile import NamedTemporaryFile
+from six import string_types
 
 class PopulationMorphology(object):
 
@@ -58,7 +68,7 @@ class PopulationMorphology(object):
         if isinstance(obj, NeuronMorphology):
             self.add_neuron(obj)
 
-        elif isinstance(obj, str):
+        elif isinstance(obj, string_types):
             from os import listdir
             from os.path import isfile, isdir, join
 
@@ -785,7 +795,7 @@ class NeuronMorphology(object):
         Returns the Euclidean distance of the node which has the maximum
         Euclidean distance from the root.
         """
-        return max(map(self.get_Euclidean_length_to_root, self._end_points))
+        return max(list(map(self.get_Euclidean_length_to_root, self._end_points)))
 
     def max_pathLength_from_root(self):
 
@@ -793,13 +803,13 @@ class NeuronMorphology(object):
         Returns the path length of the node which has the maximum path length
         from the root.
         """
-        return max(map(self.get_pathlength_to_root, self._end_points))
+        return max(list(map(self.get_pathlength_to_root, self._end_points)))
 
     def max_centrifugal_order(self):
         """
         Returns the maximum of the centrifugal orders of all nodes in the tree.
         """
-        return max(map(self.order_of_node, self._end_points))
+        return max(list(map(self.order_of_node, self._end_points)))
 
     def max_bif_angle(self):
         """
@@ -807,7 +817,7 @@ class NeuronMorphology(object):
         in the tree.
         """
         if len(self._bif_points):
-            return max(map(self.bifurcation_angle_vec, self._bif_points))
+            return max(list(map(self.bifurcation_angle_vec, self._bif_points)))
         else:
             return float('nan')
 
@@ -817,7 +827,7 @@ class NeuronMorphology(object):
         in the tree.
         """
         if len(self._bif_points):
-            return float(np.mean(map(self.bifurcation_angle_vec, self._bif_points)))
+            return float(np.mean(list(map(self.bifurcation_angle_vec, self._bif_points))))
         else:
             return float('nan')
 
@@ -827,7 +837,7 @@ class NeuronMorphology(object):
         nodes in the tree.
         """
         if len(self._bif_points):
-            return float(np.mean(map(self.partition_asymmetry, self._bif_points)))
+            return float(np.mean(list(map(self.partition_asymmetry, self._bif_points))))
         else:
             return float('nan')
 
@@ -851,7 +861,7 @@ class NeuronMorphology(object):
             tapers of all paths of the tree.
         """
 
-        burkeTapers = map(self.Burke_taper, self._end_points + self._bif_points)
+        burkeTapers = list(map(self.Burke_taper, self._end_points + self._bif_points))
 
         return float(np.mean(burkeTapers)), burkeTapers
 
@@ -869,7 +879,7 @@ class NeuronMorphology(object):
             list of Burke tapers of all paths in the tree.
         """
 
-        totuosities = map(self.tortuosity, self._end_points + self._bif_points)
+        totuosities = list(map(self.tortuosity, self._end_points + self._bif_points))
 
         return float(np.mean(totuosities)), totuosities
 
@@ -1071,7 +1081,7 @@ class NeuronMorphology(object):
         if(d1 == 1 and d2 == 1):
             return 0  # by definition
         else:
-            return np.abs(d1-d2)/(d1+d2-2.0)
+            return old_div(np.abs(d1-d2),(d1+d2-2.0))
 
     def amp(self, a):
         return np.sqrt(np.sum((a)**2))
@@ -1102,9 +1112,9 @@ class NeuronMorphology(object):
         child_node1, child_node2 = self._get_child_nodes(node, where=where)
         scaled_1 = child_node1.content['p3d'].xyz - node.content['p3d'].xyz
         scaled_2 = child_node2.content['p3d'].xyz - node.content['p3d'].xyz
-        return (np.arccos(np.dot(scaled_1, scaled_2) /
-                (self.amp(scaled_1) * self.amp(scaled_2))) /
-                (2*np.pi/360))
+        return (old_div(np.arccos(old_div(np.dot(scaled_1, scaled_2),
+                (self.amp(scaled_1) * self.amp(scaled_2)))),
+                (2*np.pi/360)))
 
     def bifurcation_sibling_ratio(self, node, where='local'):
         """
@@ -1127,9 +1137,9 @@ class NeuronMorphology(object):
         radius1 = child1.content['p3d'].radius
         radius2 = child2.content['p3d'].radius
         if radius1 > radius2:
-            return radius1 / radius2
+            return old_div(radius1, radius2)
         else:
-            return radius2 / radius1
+            return old_div(radius2, radius1)
 
     def _get_child_nodes(self, node, where):
         if where == 'local':
@@ -1188,7 +1198,7 @@ class NeuronMorphology(object):
         p_upper = 5.0  # THE associated mismatch MUST BE NEGATIVE
 
         best_n = scipy.optimize.fmin(mismatch,
-                                     (p_upper-p_lower)/2.0,
+                                     old_div((p_upper-p_lower),2.0),
                                      disp=False)
         if 0.0 < best_n < 5.0:
             return best_n
@@ -1221,8 +1231,8 @@ class NeuronMorphology(object):
         d1_diam = child1.content['p3d'].radius*2
         d2_diam = child2.content['p3d'].radius*2
 
-        return ((np.power(d1_diam, 1.5) + np.power(d2_diam, 1.5)) /
-                np.power(p_diam, 1.5))
+        return (old_div((np.power(d1_diam, 1.5) + np.power(d2_diam, 1.5)),
+                np.power(p_diam, 1.5)))
 
     def bifurcation_ralls_power_brute(self, node, where='local', min_v=0,
                                       max_v=5, steps=1000):
@@ -1364,7 +1374,7 @@ class NeuronMorphology(object):
         d_s = 2 * remote_parent.content['p3d'].radius
         pathLength = self.get_segment_pathlength(node)
 
-        burke_taper = (d_e - d_s) / pathLength
+        burke_taper = old_div((d_e - d_s), pathLength)
 
         return burke_taper
 
@@ -1391,8 +1401,7 @@ class NeuronMorphology(object):
             'Tortuosity can only be calculated for an end point or at a ' +\
             'bifurcation.'
 
-        return self.get_segment_Euclidean_length(node) \
-               / self.get_pathlength_to_root(node)
+        return old_div(self.get_segment_Euclidean_length(node), self.get_pathlength_to_root(node))
 
     def get_boundingbox(self):
         '''
@@ -1908,8 +1917,10 @@ class Tree(object):
         while not nodeQ.empty():
 
             node = nodeQ.get()
-            for child in node.children:
-                nodeQ.put(child)
+            children = dict((child.index, child) for child in node.children)
+            childrenIndsSorted = sorted(children.keys())
+            for childInd in childrenIndsSorted:
+                nodeQ.put(children[childInd])
             yield node
 
     def depth_first_iterator_generator(self):
@@ -1926,11 +1937,13 @@ class Tree(object):
         while not nodeQ.empty():
 
             node = nodeQ.get()
-            for child in node.children:
-                nodeQ.put(child)
+            children = dict((child.index, child) for child in node.children)
+            childrenIndsSorted = sorted(children.keys())
+            for childInd in childrenIndsSorted:
+                nodeQ.put(children[childInd])
             yield node
 
-    def read_SWC_tree_from_file(self, input_file, types=range(1, 10), correctIfSomaAbsent=False):
+    def read_SWC_tree_from_file(self, input_file, types=list(range(1, 10)), correctIfSomaAbsent=False):
 
         """
         Non-specific for a "tree data structure"
@@ -1974,8 +1987,8 @@ class Tree(object):
 
             swcDatasetsTypes = swc_parsing.getSWCDatasetsTypes(correctIfSomaAbsent)
 
-            self.soma_type = swcDatasetsTypes.keys()[0]
-            swcData = swcDatasetsTypes.values()[0]
+            self.soma_type = list(swcDatasetsTypes.keys())[0]
+            swcData = list(swcDatasetsTypes.values())[0]
 
             all_nodes = dict()
             for line in swcData:
@@ -1997,7 +2010,7 @@ class Tree(object):
                         if self.root is None:
                             self.root = t_node
                         else:
-                            raise(ValueError("File {} has two roots!".format(input_file)))
+                            raise ValueError("File {} has two roots!".format(input_file))
                 else:
                     # print type,index
                     pass
@@ -2128,11 +2141,10 @@ class Tree(object):
             # print "(node %i) surf as cylinder:  %f (R=%f, H=%f), P=%s" %
             # (node.index,surf,n.radius,H,p)
             total_surf = total_surf+surf
-        print("found 'multiple cylinder soma' w/ total soma surface=", \
-            total_surf)
+        print("found 'multiple cylinder soma' w/ total soma surface={}".format(total_surf))
 
         # define appropriate radius
-        radius = np.sqrt(total_surf / (4 * np.pi))
+        radius = np.sqrt(old_div(total_surf, (4 * np.pi)))
         # print "found radius: ", radius
 
         s_node_1 = Node(2)
@@ -2227,7 +2239,7 @@ class Tree(object):
         """
         nodes = self.get_nodes()
         N = len(nodes)
-        coords = map(lambda n: n.content['p3d'].xyz, nodes)
+        coords = [n.content['p3d'].xyz for n in nodes]
         points = transpose(coords)
         _, score, _ = self._pca(points.T)
         if threeD is False:
@@ -2254,10 +2266,10 @@ class Tree(object):
         :return: new transformed Neuron Morphology
         """
 
-        tempSWC = TemporaryFile(mode="rw")
+        tempSWC = NamedTemporaryFile(mode="w")
         self.write_SWC_tree_to_file(tempSWC.name)
 
-        transTempSWC = TemporaryFile(mode="rw")
+        transTempSWC = NamedTemporaryFile(mode="w")
 
         transSWC(tempSWC.name, affineTransformMatrix[:3, :3],
                  affineTransformMatrix[:3, 3], transTempSWC.name)
