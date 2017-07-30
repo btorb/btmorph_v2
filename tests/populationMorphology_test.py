@@ -74,6 +74,14 @@ def affineTransform_test():
     newPM.write_to_SWC_file(testOP)
     assert filecmp.cmp(testOP, expectedOP)
 
+def emptyPM_test():
+    """
+    Testing initializing an empty PopulationMorphology
+    :return: 
+    """
+    pm = PopulationMorphology()
+    assert len(pm.neurons) == 0
+
 
 
 if __name__ == "__main__":

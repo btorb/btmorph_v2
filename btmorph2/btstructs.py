@@ -36,17 +36,18 @@ class PopulationMorphology(object):
     List of neurons for statistical comparison, no visualisation methods
     '''
     
-    def __init__(self, obj, correctIfSomaAbsent=False):
+    def __init__(self, obj=None, correctIfSomaAbsent=False):
         """
         Default constructor.
 
         Parameters
         -----------
-        obj : : str, NeuronMorphology, list[NeuronMorphology]
+        obj : : str, NeuronMorphology, list[NeuronMorphology], None
             If obj is str it can either be a SWC file or directory containing
             SWC files. If obj is NeuronMorphology then Population will be
             create with NeuronMorphology, if List of NeuronMorphology then 
-            population will be created with that list
+            population will be created with that list. If obj is None, an empty
+            PopulationMophology is created [default].
         correctIfSomaAbsent: bool
             if True, then for trees whose roots are not of type 1, the roots are
             manually set to be of type 1 and treated as they have one point soma.
@@ -80,6 +81,9 @@ class PopulationMorphology(object):
             if isinstance(obj[0], NeuronMorphology):
                 for n in obj:
                     self.add_neuron(n)
+
+        elif obj is None:
+            pass
 
         else:
             print("Object is not valid type")
