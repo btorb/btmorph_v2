@@ -53,6 +53,20 @@ def test_NeuronMorphology_multipleTrees():
     except ValueError as ve:
         assert str(ve) == "Given SWC File {} has more than one trees".format(input_file)
 
+
+def test_empty_SWC():
+    """
+    Test if passing empty SWC file raises the appropriate error
+    :return: 
+    """
+
+    testFile = "tests/empty.swc"
+
+    try:
+        nrn = NeuronMorphology(testFile)
+    except ValueError as ve:
+        assert str(ve) == "Improper data in SWC file {}".format(testFile)
+
 def test_load_swc():
     '''
     Test whether SWC files are correctly loaded
@@ -443,4 +457,5 @@ def depth_first_iterator_test():
 
 
 if __name__ == "__main__":
-    test_NeuronMorphology_multipleTrees()
+    # test_NeuronMorphology_multipleTrees()
+    test_empty_SWC()

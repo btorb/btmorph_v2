@@ -12,13 +12,15 @@ def readSWC_numpy(swcFile):
     headr = ''
     with open(swcFile, 'r') as fle:
         lne = fle.readline()
-        while lne[0] == '#':
+        while lne.startswith("#"):
             headr = headr + lne[1:]
             lne = fle.readline()
 
     headr = headr.rstrip('\n')
 
-    swcData = np.loadtxt(swcFile)
+    # np.loadtxt can lead to errors if the file contains non utf-8 chars
+    # https://stackoverflow.com/questions/22936790/numpy-loadtxt-unicode-and-python-2-or-3
+    swcData = np.genfromtxt(swcFile)
 
     if len(swcData.shape) == 1:
         swcData = swcData.reshape((1, swcData.shape[0]))

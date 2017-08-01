@@ -10,7 +10,8 @@ setup(
         "matplotlib>=1.5.3",
         "scipy>=0.18.1",
         "networkX>=1.11",
-        "pathlib2>=2.2.1"
+        "pathlib2>=2.2.1",
+        "future>=0.16"
      ],
     python_requires=">=2.7",
 )

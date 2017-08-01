@@ -46,7 +46,9 @@ class PopulationMorphology(object):
     List of neurons for statistical comparison, no visualisation methods
     '''
     
-    def __init__(self, obj=None, correctIfSomaAbsent=False):
+    def __init__(self, obj=None,
+                 correctIfSomaAbsent=False,
+                 ignore_type=False):
         """
         Default constructor.
 
@@ -61,6 +63,8 @@ class PopulationMorphology(object):
         correctIfSomaAbsent: bool
             if True, then for trees whose roots are not of type 1, the roots are
             manually set to be of type 1 and treated as they have one point soma.
+        ignore_type: bool
+            if True, the 'type' value in the second column is ignored
         """
 
         self.neurons = []
@@ -77,12 +81,16 @@ class PopulationMorphology(object):
                                                      and
                                                      f.endswith('.swc'))]
                 for f in files:
-                    nms = self.parseSWCFile2NM(join(obj, f), correctIfSomaAbsent=correctIfSomaAbsent)
+                    nms = self.parseSWCFile2NM(join(obj, f),
+                                               correctIfSomaAbsent=correctIfSomaAbsent,
+                                               ignore_type=ignore_type)
 
                     for n in nms:
                         self.add_neuron(n)
             if isfile(obj) and obj.endswith(".swc"):
-                nms = self.parseSWCFile2NM(obj, correctIfSomaAbsent=correctIfSomaAbsent)
+                nms = self.parseSWCFile2NM(obj,
+                                           correctIfSomaAbsent=correctIfSomaAbsent,
+                                           ignore_type=ignore_type)
 
                 for n in nms:
                     self.add_neuron(n)
@@ -99,7 +107,7 @@ class PopulationMorphology(object):
             print("Object is not valid type")
 
     @staticmethod
-    def parseSWCFile2NM(swcFile, correctIfSomaAbsent):
+    def parseSWCFile2NM(swcFile, correctIfSomaAbsent, ignore_type):
 
         swcP = SWCParsing(swcFile)
         tmpDir = mkdtemp()
@@ -108,7 +116,8 @@ class PopulationMorphology(object):
         NMs = []
         for f in files:
             n = NeuronMorphology(input_file=f,
-                                 correctIfSomaAbsent=correctIfSomaAbsent)
+                                 correctIfSomaAbsent=correctIfSomaAbsent,
+                                 ignore_type=ignore_type)
             NMs.append(n)
 
         shutil.rmtree(tmpDir)
@@ -236,7 +245,8 @@ class NeuronMorphology(object):
 
     def __init__(self, input_file=None, pca_translate=False,
                  translate_origin=None, width="x", height="z",
-                 depth="y", correctIfSomaAbsent=False):
+                 depth="y", correctIfSomaAbsent=False,
+                 ignore_type=False):
 
         """
         Default constructor.
@@ -269,6 +279,8 @@ class NeuronMorphology(object):
         correctIfSomaAbsent: bool
             if True, then for trees whose roots are not of type 1, the roots are
             manually set to be of type 1 and treated as they have one point soma.
+        ignore_type: bool
+            if True, the 'type' value in the second column are ignored
         """
 
         axis_config = [0, 0, 0]
@@ -297,6 +309,7 @@ class NeuronMorphology(object):
         if input_file is not None:
             self.axis_config = axis_config
             self.correctIfSomaAbsent = correctIfSomaAbsent
+            self.ignore_type = ignore_type
             self.file = input_file
 
         if pca_translate:
@@ -347,7 +360,8 @@ class NeuronMorphology(object):
             File name of neuron to be created,
         """
         if tree is None:
-            self.__tree = Tree(self.file, self.axis_config, self.correctIfSomaAbsent)
+            self.__tree = Tree(self.file, self.axis_config,
+                               self.correctIfSomaAbsent, self.ignore_type)
         else:
             self.__tree = tree
         self._all_nodes = self.tree.get_nodes()
@@ -1446,7 +1460,8 @@ class Tree(object):
     this is a generic implementation of a tree structure as a linked list.
     '''
 
-    def __init__(self, input_file=None, axis_config=(0, 1, 2), correctIfSomaAbsent=False):
+    def __init__(self, input_file=None, axis_config=(0, 1, 2),
+                 correctIfSomaAbsent=False, ignore_type=False):
 
         """
         Default constructor.
@@ -1461,10 +1476,18 @@ class Tree(object):
         correctIfSomaAbsent: bool
             if True, then for trees whose roots are not of type 1, the roots are
             manually set to be of type 1 and treated as they have one point soma.
+        ignore_type: bool
+            if True, ignore the 'type' value at column 2
         """
+
+        self.correctIfSomaAbsent = correctIfSomaAbsent
+        self.ignore_type = ignore_type
+
         if input_file is not None:
             self.root = None
-            self.read_SWC_tree_from_file(input_file, correctIfSomaAbsent=correctIfSomaAbsent)
+            self.read_SWC_tree_from_file(input_file,
+                                         correctIfSomaAbsent=correctIfSomaAbsent,
+                                         ignore_type=ignore_type)
         if (axis_config[0] is not 0 or axis_config[1]
                 is not 1 or axis_config[2] is not 2):  # switch axis
             if axis_config[0] == 0:
@@ -1943,7 +1966,8 @@ class Tree(object):
                 nodeQ.put(children[childInd])
             yield node
 
-    def read_SWC_tree_from_file(self, input_file, types=list(range(1, 10)), correctIfSomaAbsent=False):
+    def read_SWC_tree_from_file(self, input_file, types=list(range(1, 10)),
+                                correctIfSomaAbsent=False, ignore_type=False):
 
         """
         Non-specific for a "tree data structure"
@@ -1968,9 +1992,11 @@ class Tree(object):
             File name of neuron to be created
         types: iterable of integers
             Specifies the expected values for column 2 of an SWC file
-        correctIfSomaAbsent:
+        correctIfSomaAbsent: bool
             if True, then for trees whose roots are not of type 1, the roots are
             manually set to be of type 1 and treated as they have one point soma.
+        ignore_type: bool
+            if True, the 'type' value of column 2 are ignored
 
 
         """
@@ -2001,7 +2027,7 @@ class Tree(object):
                 radius = float(line[5])
                 parent_index = int(line[6])
 
-                if swc_type in types:
+                if swc_type in types or ignore_type:
                     tP3D = P3D(np.array([x, y, z]), radius, swc_type)
                     t_node = Node(index)
                     t_node.content = {'p3d': tP3D}
@@ -2274,7 +2300,8 @@ class Tree(object):
         transSWC(tempSWC.name, affineTransformMatrix[:3, :3],
                  affineTransformMatrix[:3, 3], transTempSWC.name)
 
-        return Tree(transTempSWC.name)
+        return Tree(transTempSWC.name,
+                    ignore_type=self.ignore_type)
 
     def __iter__(self):
 

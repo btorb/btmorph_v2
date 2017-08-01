@@ -20,6 +20,7 @@ class SWCParsing(object):
         self.headr, self.swcData = readSWC_numpy(swcFile)
         self.swcFile = swcFile
 
+
     def numberOfTrees(self):
 
         parents = self.swcData[:, 6]
