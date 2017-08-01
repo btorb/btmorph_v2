@@ -67,6 +67,22 @@ def test_empty_SWC():
     except ValueError as ve:
         assert str(ve) == "Improper data in SWC file {}".format(testFile)
 
+def test_nonUTF8_SWC():
+    """
+    Test parsing SWC file with non utf-8 encoded chars
+    :return: 
+    """
+
+    testFile = "tests/nonUTF8.swc"
+
+
+    nrn = NeuronMorphology(testFile, correctIfSomaAbsent=True, ignore_type=True)
+
+    assert len(nrn.tree.get_nodes()) == 18
+
+
+
+
 def test_load_swc():
     '''
     Test whether SWC files are correctly loaded

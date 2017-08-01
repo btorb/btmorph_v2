@@ -9,17 +9,24 @@ def readSWC_numpy(swcFile):
     :param swcFile: filename
     :return: header (string), matrix data (ndarray)
     '''
-    headr = ''
-    with open(swcFile, 'r') as fle:
-        lne = fle.readline()
-        while lne.startswith("#"):
-            headr = headr + lne[1:]
-            lne = fle.readline()
 
-    headr = headr.rstrip('\n')
+    headr = ''
+    try:
+
+        with open(swcFile, 'r') as fle:
+            lne = fle.readline()
+            while lne.startswith("#"):
+                headr = headr + lne[1:]
+                lne = fle.readline()
+
+        headr = headr.rstrip('\n')
+    except UnicodeDecodeError as ude:
+        print("Warning: The header of {} has non UTF-8 chars. This head is not read".format(swcFile))
 
     # np.loadtxt can lead to errors if the file contains non utf-8 chars
     # https://stackoverflow.com/questions/22936790/numpy-loadtxt-unicode-and-python-2-or-3
+
+
     swcData = np.genfromtxt(swcFile)
 
     if len(swcData.shape) == 1:
