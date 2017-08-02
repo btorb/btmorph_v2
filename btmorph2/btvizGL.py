@@ -1,9 +1,3 @@
-from __future__ import division
-from __future__ import print_function
-from builtins import str
-from builtins import range
-from builtins import object
-from past.utils import old_div
 import OpenGL
 import OpenGL.GL as GL
 import OpenGL.GLU as GLU
@@ -20,7 +14,7 @@ import numpy
 OpenGL.USE_FREEGLUT = True
 
 
-class tickScaler(object):
+class tickScaler:
     def __init__(self, minv, maxv):
         self.maxTicks = 6
         self.tickSpacing = 0
@@ -35,13 +29,13 @@ class tickScaler(object):
     def calculate(self):
         if not self.maxPoint == self.minPoint:
             self.lst = self.niceNum(self.maxPoint - self.minPoint, False)
-            self.tickSpacing = self.niceNum(old_div(self.lst,
-                                            (self.maxTicks - 1)), True)
-            self.niceMin = math.floor(old_div(self.minPoint,
-                                      self.tickSpacing)) * self.tickSpacing
-            self.niceMax = math.ceil(old_div(self.maxPoint,
-                                     self.tickSpacing)) * self.tickSpacing
-            self.noTicks = old_div((self.niceMax - self.niceMin), self.tickSpacing)
+            self.tickSpacing = self.niceNum(self.lst /
+                                            (self.maxTicks - 1), True)
+            self.niceMin = math.floor(self.minPoint /
+                                      self.tickSpacing) * self.tickSpacing
+            self.niceMax = math.ceil(self.maxPoint /
+                                     self.tickSpacing) * self.tickSpacing
+            self.noTicks = (self.niceMax - self.niceMin) / self.tickSpacing
         else:
             self.lst = 0
             self.tickSpacing = 0
@@ -54,7 +48,7 @@ class tickScaler(object):
         niceFraction = 0  # nice, rounded fraction */
 
         exponent = math.floor(math.log10(self.lst))
-        fraction = old_div(self.lst, math.pow(10, exponent))
+        fraction = self.lst / math.pow(10, exponent)
 
         if (self.lst):
             if (fraction < 1.5):
@@ -87,7 +81,7 @@ class tickScaler(object):
         self.calculate()
 
 
-class camera(object):
+class camera:
 
     forward = False
     backward = False
@@ -119,7 +113,7 @@ class camera(object):
         self.movementspeed = 0.01
 
     def toRadian(self, angle):
-        return angle * (old_div(n.pi, 180))
+        return angle * (n.pi / 180)
 
     def moveFocus(self):
         if(self.forward and not self.backward and not
@@ -162,7 +156,7 @@ class camera(object):
         return [cx, cy, cz]
 
 
-class graphbuilder(object):
+class graphbuilder:
     Graph = None
 
     niceScaleArr = None
@@ -448,12 +442,12 @@ class graphbuilder(object):
             last[edges.index(e)] = [i1, i2, i3]
 
         s = s + 0.5
-        xyzOff = [old_div(self.scale(self.niceScaleArr[0].tickSpacing,
-                  self.scalefactor), 2),
-                  old_div(self.scale(self.niceScaleArr[1].tickSpacing,
-                  self.scalefactor), 2),
-                  old_div(self.scale(self.niceScaleArr[2].tickSpacing,
-                  self.scalefactor), 2)]
+        xyzOff = [self.scale(self.niceScaleArr[0].tickSpacing,
+                  self.scalefactor) / 2,
+                  self.scale(self.niceScaleArr[1].tickSpacing,
+                  self.scalefactor) / 2,
+                  self.scale(self.niceScaleArr[2].tickSpacing,
+                  self.scalefactor) / 2]
 
         if not first[0] == corner:
             self.billboardLabel([first[0][0] - xyzOff[0],
@@ -482,10 +476,10 @@ class graphbuilder(object):
                                  last[2][2] + xyzOff[2]], 40, 0, s)
 
     def scale3d(self, value, factor):
-        return [(old_div(value[0], factor)), (old_div(value[1], factor)), (old_div(value[2], factor))]
+        return [(value[0] / factor), (value[1] / factor), (value[2] / factor)]
 
     def scale(self, value, factor):
-        return old_div(value, factor)
+        return value / factor
 
     def billboardLabel(self, objPos, character, offset, scale):
 
@@ -522,7 +516,7 @@ class graphbuilder(object):
         GL.glDisable(GL.GL_BLEND)
 
     def toRadian(self, angle):
-        return angle * (old_div(n.pi, 180))
+        return angle * (n.pi / 180)
 
     def LoadFontImage(self):
         im = Image.open("res/font_0.png").convert("RGBA")
@@ -594,7 +588,7 @@ class graphbuilder(object):
         for loop in range(0, 69):
 
             getcontext().prec = 6
-            c = (old_div(Decimal(1), Decimal(256)))
+            c = (Decimal(1) / Decimal(256))
             cx = c * Decimal(int(x[loop]))
             cy = c * Decimal(int(y[loop]))
             cxw = cx + (c * Decimal(int(self.w[loop])))
@@ -787,10 +781,10 @@ class graphbuilder(object):
         return [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
 
     def vecDiv(self, a, b):
-        return [old_div(a[0], b), old_div(a[1], b), old_div(a[2], b)]
+        return [a[0] / b, a[1] / b, a[2] / b]
 
 
-class modelbuilder(object):
+class modelbuilder:
 
     index = None
     lists = []
@@ -809,8 +803,8 @@ class modelbuilder(object):
         return self.root, self.vertices_gl, self.colors_gl, self.Neuron
 
     def LoadLineObject(self, neuron):
-        from .btstructs import NeuronMorphology
-        from .btstructs import ForestStructure
+        from btstructs import NeuronMorphology
+        from btstructs import ForestStructure
 
         if isinstance(neuron, NeuronMorphology):
             result = self.LoadLineNeuron(neuron)
@@ -835,8 +829,8 @@ class modelbuilder(object):
             self.colors_gl = numpy.array.vbo.VBO(colors)
 
     def LoadPolyObject(self, neuron, fast=False):
-        from .btstructs import NeuronMorphology
-        from .btstructs import ForestStructure
+        from btstructs import NeuronMorphology
+        from btstructs import ForestStructure
 
         if isinstance(neuron, NeuronMorphology):
             self.Neuron = GL.glGenLists(1)
@@ -882,8 +876,8 @@ class modelbuilder(object):
                              self.scalefactor)
             if index <= 3:
                 index += 1
-                print('do not draw the soma and its CNG,\
-                       !!! 2 !!! point descriptions')
+                print 'do not draw the soma and its CNG,\
+                       !!! 2 !!! point descriptions'
             else:
                 parent = node.parent
                 p_x = self.scale(parent.content['p3d'].xyz[0] + offset[0],
@@ -892,7 +886,7 @@ class modelbuilder(object):
                                  self.scalefactor)
                 p_z = self.scale(parent.content['p3d'].xyz[1] + offset[1],
                                  self.scalefactor)
-                print('index:', index)
+                print 'index:', index
 
                 vertices.append([p_x, p_z, p_y])
                 vertices.append([c_x, c_z, c_y])
@@ -904,7 +898,7 @@ class modelbuilder(object):
             n.array(colors, dtype=n.float32)
 
     def LoadPolyNeuron(self, neuron, index=0, fast=False):
-        from .btstructs import NeuronMorphology
+        from btstructs import NeuronMorphology
 
         offset = [0, 0, 0]
         my_color_list = [[1.0, 0.0, 0.0],
@@ -956,10 +950,10 @@ class modelbuilder(object):
                 GLE.glePolyCone(point_array, colour_array, radius_array)
 
     def scale(self, value, factor):
-        return old_div(value, factor)
+        return value / factor
 
 
-class btvizGL(object):
+class btvizGL:
     running = True
 
     leftMouseDown = False
@@ -1122,7 +1116,7 @@ class btvizGL(object):
 
         if height == 0:
             height = 1
-        aspect = old_div(width, height)
+        aspect = width / height
 
         GL.glViewport(0, 0, width, height)
         GL.glMatrixMode(GL.GL_PROJECTION)
