@@ -12,16 +12,31 @@ Daniele Linaro contributed the iterators in  :class:`STree2`.
 Sam Sutton refactored and renamed classes, implemented
     PopulationMorphology and NeuronMorphology
 """
+from __future__ import division
+from __future__ import print_function
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import map
+from builtins import range
+from builtins import object
+from past.utils import old_div
 import sys
 import numpy as np
 
-from btmorph2.btviz import plot_2D
-from btmorph2.btviz import plot_3D
-from btmorph2.btviz import animate
-from btmorph2.btviz import plot_dendrogram
+from .btviz import plot_2D
+from .btviz import plot_3D
+from .btviz import animate
+from .btviz import plot_dendrogram
 from numpy import mean, cov, dot, linalg, transpose
-from __builtin__ import str
-
+from .SWCParsing import SWCParsing
+from tempfile import mkdtemp
+import shutil
+import pathlib2
+from .auxFuncs import readSWC_numpy, writeSWC_numpy, transSWC
+from queue import Queue, LifoQueue
+from tempfile import NamedTemporaryFile
+from six import string_types
 
 class PopulationMorphology(object):
 
@@ -31,47 +46,83 @@ class PopulationMorphology(object):
     List of neurons for statistical comparison, no visualisation methods
     '''
     
-    neurons = []
-    
-    def __init__(self, obj):
+    def __init__(self, obj=None,
+                 correctIfSomaAbsent=False,
+                 ignore_type=False):
         """
         Default constructor.
 
         Parameters
         -----------
-        obj : : str, NeuronMorphology, list[NeuronMorphology]
+        obj : : str, NeuronMorphology, list[NeuronMorphology], None
             If obj is str it can either be a SWC file or directory containing
             SWC files. If obj is NeuronMorphology then Population will be
             create with NeuronMorphology, if List of NeuronMorphology then 
-            population will be created with that list
+            population will be created with that list. If obj is None, an empty
+            PopulationMophology is created [default].
+        correctIfSomaAbsent: bool
+            if True, then for trees whose roots are not of type 1, the roots are
+            manually set to be of type 1 and treated as they have one point soma.
+        ignore_type: bool
+            if True, the 'type' value in the second column is ignored
         """
 
-        try:
-            if isinstance(obj, NeuronMorphology):
-                self.add_neuron(obj)
+        self.neurons = []
 
-            elif isinstance(obj, str):
-                from os import listdir
-                from os.path import isfile, isdir, join
+        if isinstance(obj, NeuronMorphology):
+            self.add_neuron(obj)
 
-                if isdir(obj):
-                    files = [f for f in listdir(obj) if (isfile(join(obj, f)) 
-                                                         and
-                                                         f.endswith('.swc'))]
-                    for f in files:
-                        n = NeuronMorphology(input_file=join(obj, f))
+        elif isinstance(obj, string_types):
+            from os import listdir
+            from os.path import isfile, isdir, join
+
+            if isdir(obj):
+                files = [f for f in listdir(obj) if (isfile(join(obj, f))
+                                                     and
+                                                     f.endswith('.swc'))]
+                for f in files:
+                    nms = self.parseSWCFile2NM(join(obj, f),
+                                               correctIfSomaAbsent=correctIfSomaAbsent,
+                                               ignore_type=ignore_type)
+
+                    for n in nms:
                         self.add_neuron(n)
-                if isfile(obj):
-                    n = NeuronMorphology(input_file=join(obj))
+            if isfile(obj) and obj.endswith(".swc"):
+                nms = self.parseSWCFile2NM(obj,
+                                           correctIfSomaAbsent=correctIfSomaAbsent,
+                                           ignore_type=ignore_type)
+
+                for n in nms:
                     self.add_neuron(n)
 
-            elif isinstance(obj, list):
-                if isinstance(obj[0], NeuronMorphology):
-                    for n in obj:
-                        self.add_neuron(n)
+        elif isinstance(obj, list):
+            if isinstance(obj[0], NeuronMorphology):
+                for n in obj:
+                    self.add_neuron(n)
 
-        except:
-            print "Object is not valid type"
+        elif obj is None:
+            pass
+
+        else:
+            print("Object is not valid type")
+
+    @staticmethod
+    def parseSWCFile2NM(swcFile, correctIfSomaAbsent, ignore_type):
+
+        swcP = SWCParsing(swcFile)
+        tmpDir = mkdtemp()
+        files = swcP.getTreesAsFiles(tmpDir)
+
+        NMs = []
+        for f in files:
+            n = NeuronMorphology(input_file=f,
+                                 correctIfSomaAbsent=correctIfSomaAbsent,
+                                 ignore_type=ignore_type)
+            NMs.append(n)
+
+        shutil.rmtree(tmpDir)
+
+        return NMs
 
     def add_neuron(self, neuron):
         self.neurons.append(neuron)
@@ -83,67 +134,104 @@ class PopulationMorphology(object):
         return len(self.neurons)
 
     def no_of_bifurcations(self):
+        result = []
         if self.neurons is not None:
-            result = []
             for n in self.neurons:
                 result.append(n.no_bifurcations())
         return result
 
     def no_terminals(self):
+        result = []
         if self.neurons is not None:
-            result = []
             for n in self.neurons:
                 result.append(n.no_terminals())
         return result
 
     def no_stems(self):
+        result = []
         if self.neurons is not None:
-            result = []
             for n in self.neurons:
                 result.append(n.no_stems())
         return result
 
     def total_length(self):
+        result = []
         if self.neurons is not None:
-            result = []
             for n in self.neurons:
                 result.append(n.total_length())
         return result
 
     def total_surface(self):
+        result = []
         if self.neurons is not None:
-            result = []
             for n in self.neurons:
                 result.append(n.total_surface())
         return result
 
     def total_volume(self):
+        result = []
         if self.neurons is not None:
-            result = []
             for n in self.neurons:
                 result.append(n.total_volume())
         return result
 
     def total_dimensions_verbose(self):
+        result = []
         if self.neurons is not None:
-            result = []
             for n in self.neurons:
                 result.append(n.total_dimensions_verbose())
         return result
 
     def global_horton_strahler(self):
+        result = []
         if self.neurons is not None:
-            result = []
             for n in self.neurons:
                 result.append(n.global_horton_strahler())
         return result
 
     def get_diameters(self):
+        result = []
         if self.neurons is not None:
-            result = []
             for n in self.neurons:
                 result.append(n.get_diameters())
         return result
+
+    def write_to_SWC_file(self, outFile):
+
+        tmpDir = mkdtemp()
+        tmpDirPath = pathlib2.Path(tmpDir)
+
+        with open(outFile, 'w') as outFileObj:
+            currentMax = 0
+            for nInd, n in enumerate(self.neurons):
+
+                tmpFle = str(tmpDirPath / "{:02d}.swc".format(nInd))
+
+                n.tree.write_SWC_tree_to_file(tmpFle)
+
+                headr, swcData = readSWC_numpy(tmpFle)
+
+                swcData[:, 0] += currentMax
+                swcData[1:, 6] += currentMax
+
+                currentMax = swcData[:, 0].max()
+
+                for row in swcData:
+                    outFileObj.write('{:.0f} {:.0f} {:0.6f} {:0.6f} {:0.6f} {:0.6f} {:.0f}\n'.format(*row[:7]))
+
+        shutil.rmtree(tmpDir)
+
+    def affineTransform(self, affineTransformMatrix):
+        """
+        returns a copy of the Population Morphology with each of its neurons transformed by 
+        affineTransformMatrix
+        :param affineTransformMatrix: numpy.ndarray of shape (4, 4) 
+        :return: Population Morphology
+        """
+
+        newNMs = [x.affineTransform(affineTransformMatrix) for x in self.neurons]
+        newPM = PopulationMorphology(newNMs)
+        return newPM
 
 
 class NeuronMorphology(object):
@@ -157,7 +245,8 @@ class NeuronMorphology(object):
 
     def __init__(self, input_file=None, pca_translate=False,
                  translate_origin=None, width="x", height="z",
-                 depth="y"):
+                 depth="y", correctIfSomaAbsent=False,
+                 ignore_type=False):
 
         """
         Default constructor.
@@ -187,6 +276,11 @@ class NeuronMorphology(object):
         depth : string
             Either "x", "y" or "z" to determine which axis in the SWC format
                 corresponds to the internally stored axis.
+        correctIfSomaAbsent: bool
+            if True, then for trees whose roots are not of type 1, the roots are
+            manually set to be of type 1 and treated as they have one point soma.
+        ignore_type: bool
+            if True, the 'type' value in the second column are ignored
         """
 
         axis_config = [0, 0, 0]
@@ -214,6 +308,8 @@ class NeuronMorphology(object):
 
         if input_file is not None:
             self.axis_config = axis_config
+            self.correctIfSomaAbsent = correctIfSomaAbsent
+            self.ignore_type = ignore_type
             self.file = input_file
 
         if pca_translate:
@@ -264,7 +360,8 @@ class NeuronMorphology(object):
             File name of neuron to be created,
         """
         if tree is None:
-            self.__tree = Tree(self.file, self.axis_config)
+            self.__tree = Tree(self.file, self.axis_config,
+                               self.correctIfSomaAbsent, self.ignore_type)
         else:
             self.__tree = tree
         self._all_nodes = self.tree.get_nodes()
@@ -416,7 +513,7 @@ class NeuronMorphology(object):
         plot_dendrogram(self)
         
     def plot_2D(self, color_scheme="default", color_mapping=None,
-                synapses=None, save_image=None, depth='y',show_radius=True):
+                synapses=None, save_image=None, depth='y', show_radius=True):
 
         """
         Gate way to btviz plot_2D_SWC to create object orientated relationship
@@ -477,7 +574,7 @@ class NeuronMorphology(object):
         bif_points = []
         end_points = []
 
-        # updated 2014-01-21 for compatibility with new btstructs2
+        # updated 2014-01-21 for compatibility with new btstructs
         for node in self._all_nodes:
             if len(node.children) > 1:
                 if node.parent is not None:
@@ -487,7 +584,7 @@ class NeuronMorphology(object):
                                             # avoid the two side branches
                     end_points.append(node)
             if node.parent is None:
-                soma_points = node
+                soma_points = [node]
 
         return soma_points, bif_points, end_points
 
@@ -574,7 +671,7 @@ class NeuronMorphology(object):
             total length in micron
         """
         L = 0
-        # updated 2014-01-21 for compatibility with new btstructs2
+        # updated 2014-01-21 for compatibility with new btstructs
         for Node in self._all_nodes:
             n = Node.content['p3d']
             if Node.index not in (1, 2, 3):
@@ -599,7 +696,7 @@ class NeuronMorphology(object):
         """
         total_surf = 0
         all_surfs = []
-        # updated 2014-01-21 for compatibility with new btstructs2
+        # updated 2014-01-21 for compatibility with new btstructs
         for Node in self._all_nodes:
             n = Node.content['p3d']
             if Node.index not in (1, 2, 3):
@@ -624,7 +721,7 @@ class NeuronMorphology(object):
         """
         total_vol = 0
         all_vols = []
-        # updated 2014-01-21 for compatibility with new btstructs2
+        # updated 2014-01-21 for compatibility with new btstructs
         for Node in self._all_nodes:
             n = Node.content['p3d']
             if Node.index not in (1, 2, 3):
@@ -648,7 +745,7 @@ class NeuronMorphology(object):
         dz : float
             z-dimension
         """
-        dx, dy, dz = self.total_dimensions_verbose()
+        dx, dy, dz, maxs = self.total_dimensions_verbose()
         return dx, dy, dz
 
     def total_dimensions_verbose(self):
@@ -657,7 +754,6 @@ class NeuronMorphology(object):
 
         Overall dimension of the whole moprhology. (No translation of the \
         moprhology according to arbitrary axes.)
-
 
         Returns
         -------
@@ -668,15 +764,16 @@ class NeuronMorphology(object):
         dz : float
             z-dimension
         data : list
-            minX,maxX,minY,maxY,minZ,maxZ
-
+            minX, maxX, minY, maxY, minZ, maxZ
         """
-        minX = sys.maxint
-        maxX = -1 * sys.maxint
-        minY = sys.maxint
-        maxY = -1 * sys.maxint
-        minZ = sys.maxint
-        maxZ = -1 * sys.maxint
+        # comparisons (preset max and min; minint is -maxint - 1, as mentioned
+        # here: https://docs.python.org/2/library/sys.html)
+        minX = sys.maxsize
+        maxX = -sys.maxsize - 1
+        minY = sys.maxsize
+        maxY = -sys.maxsize - 1
+        minZ = sys.maxsize
+        maxZ = -sys.maxsize - 1
         for Node in self._all_nodes:
             n = Node.content['p3d']
             nx = n.xyz[0]
@@ -700,14 +797,105 @@ class NeuronMorphology(object):
         Calculate Horton-Strahler number at the root
         See :func:`local_horton_strahler`
 
-        Parameters
-        ---------
-
         Returns
         ---------
         Horton-Strahler number at the root
         """
         return self.local_horton_strahler(self.__tree.root)
+
+    def max_EucDistance_from_root(self):
+
+        """
+        Returns the Euclidean distance of the node which has the maximum
+        Euclidean distance from the root.
+        """
+        return max(list(map(self.get_Euclidean_length_to_root, self._end_points)))
+
+    def max_pathLength_from_root(self):
+
+        """
+        Returns the path length of the node which has the maximum path length
+        from the root.
+        """
+        return max(list(map(self.get_pathlength_to_root, self._end_points)))
+
+    def max_centrifugal_order(self):
+        """
+        Returns the maximum of the centrifugal orders of all nodes in the tree.
+        """
+        return max(list(map(self.order_of_node, self._end_points)))
+
+    def max_bif_angle(self):
+        """
+        Returns the maximum of the bifurcation angles of all bifurcation nodes
+        in the tree.
+        """
+        if len(self._bif_points):
+            return max(list(map(self.bifurcation_angle_vec, self._bif_points)))
+        else:
+            return float('nan')
+
+    def avg_bif_angle(self):
+        """
+        Returns the average of the bifurcation angles of all bifurcation nodes
+        in the tree.
+        """
+        if len(self._bif_points):
+            return float(np.mean(list(map(self.bifurcation_angle_vec, self._bif_points))))
+        else:
+            return float('nan')
+
+    def avg_partition_asymmetry(self):
+        """
+        Returns the average of the partition assymetries of all bifurcation
+        nodes in the tree.
+        """
+        if len(self._bif_points):
+            return float(np.mean(list(map(self.partition_asymmetry, self._bif_points))))
+        else:
+            return float('nan')
+
+    def avg_diameter(self):
+        """
+        Returns the average of the diameters of all nodes in the tree.
+        """
+        return float(np.mean(self.get_diameters()))
+
+    def avg_Burke_taper(self):
+        """
+        Calculate the average Burke taper of all paths in the tree.
+        A path is defined as a stretch between
+        the soma and a bifurcation point, between bifurcation points,
+        or in between of a bifurcation point and a terminal point
+
+        Returns
+        -------
+        (average_Burke_taper, all_Burke_tapers): (float, list)
+            A tuple of the average Burke taper for the tree and a list of Burke
+            tapers of all paths of the tree.
+        """
+
+        burkeTapers = list(map(self.Burke_taper, self._end_points + self._bif_points))
+
+        return float(np.mean(burkeTapers)), burkeTapers
+
+    def avg_tortuosity(self):
+        """
+        Calculate the average tortuosity of all paths in the tree.
+        A path is defined as a stretch between
+        the soma and a bifurcation point, between bifurcation points,
+        or in between of a bifurcation point and a terminal point
+
+        Returns
+        -------
+        (average_tortuosity, all_Burke_tapers): (float, list)
+            A tuple of the average tortuosity for all paths in the tree and a
+            list of Burke tapers of all paths in the tree.
+        """
+
+        totuosities = list(map(self.tortuosity, self._end_points + self._bif_points))
+
+        return float(np.mean(totuosities)), totuosities
 
     """
     Local measures
@@ -735,16 +923,15 @@ class NeuronMorphology(object):
 
         Parameters
         ----------
-        to_node : :class:`btmorph.btstructs2.SNode2`
+        to_node : :class:`btmorph.btstructs.SNode`
            Node *to* which the measurement is taken
 
         Returns
         -------
         length : float
             length of the incoming path in micron
-
         """
-        # updated 2014-01-21 for compatibility with new btstructs2
+        # updated 2014-01-21 for compatibility with new btstructs
         L = 0
         if self.__tree.is_leaf(to_node):
             path = self.__tree.path_to_root(to_node)
@@ -774,13 +961,12 @@ class NeuronMorphology(object):
 
         Parameters
         ----------
-        from_node : :class:`btmorph.btstructs2.SNode2`
+        from_node : :class:`btmorph.btstructs.SNode`
 
         Returns
         -------
         length : float
             length of the path between the soma and the provided Node
-
         """
 
         L = 0
@@ -809,14 +995,13 @@ class NeuronMorphology(object):
 
         Parameters
         ----------
-        from_node : :class:`btmorph.btstructs2.SNode2`
+        from_node : :class:`btmorph.btstructs.SNode`
 
         Returns
         -------
         length : float
             Euclidean distance *to* provided Node (from soma or first branch
              point with lower order)
-
         """
         L = 0
         if self.__tree.is_leaf(to_node):
@@ -839,7 +1024,7 @@ class NeuronMorphology(object):
 
         Parameters
         ----------
-        from_node : :class:`btmorph.btstructs2.SNode2`
+        from_node : :class:`btmorph.btstructs.SNode`
 
         Returns
         -------
@@ -863,12 +1048,11 @@ class NeuronMorphology(object):
 
         Parameters
         ----------
-        node : :class:`btmorph.btstructs2.SNode2`
+        node : :class:`btmorph.btstructs.SNode`
 
         Returns
         -------
         degree : float
-
         """
         return self.tree.degree_of_node(node)
 
@@ -879,13 +1063,12 @@ class NeuronMorphology(object):
 
         Parameters
         ----------
-        node : :class:`btmorph.btstructs2.SNode2`
+        node : :class:`btmorph.btstructs.SNode`
 
         Returns
         -------
         order : float
             order of the subneuron rooted at Node
-
         """
         return self.__tree.order_of_node(node)
 
@@ -897,14 +1080,13 @@ class NeuronMorphology(object):
 
         Parameters
         ----------
-        node : :class:`btmorph.btstructs2.SNode2`
+        node : :class:`btmorph.btstructs.SNode`
 
         Returns
         -------
         partition_asymmetry : float
             partition asymmetry of the subneuron rooted at Node
             (according to vanpelt and schierwagen 199x)
-
         """
         if node.children is None or len(node.children) == 1:
             return None
@@ -913,7 +1095,7 @@ class NeuronMorphology(object):
         if(d1 == 1 and d2 == 1):
             return 0  # by definition
         else:
-            return np.abs(d1-d2)/(d1+d2-2.0)
+            return old_div(np.abs(d1-d2),(d1+d2-2.0))
 
     def amp(self, a):
         return np.sqrt(np.sum((a)**2))
@@ -944,9 +1126,9 @@ class NeuronMorphology(object):
         child_node1, child_node2 = self._get_child_nodes(node, where=where)
         scaled_1 = child_node1.content['p3d'].xyz - node.content['p3d'].xyz
         scaled_2 = child_node2.content['p3d'].xyz - node.content['p3d'].xyz
-        return (np.arccos(np.dot(scaled_1, scaled_2) /
-                (self.amp(scaled_1) * self.amp(scaled_2))) /
-                (2*np.pi/360))
+        return (old_div(np.arccos(old_div(np.dot(scaled_1, scaled_2),
+                (self.amp(scaled_1) * self.amp(scaled_2)))),
+                (2*np.pi/360)))
 
     def bifurcation_sibling_ratio(self, node, where='local'):
         """
@@ -956,7 +1138,7 @@ class NeuronMorphology(object):
 
         Parameters
         ----------
-        Node : :class:`btmorph.btstructs2.SNode2`
+        Node : :class:`btmorph.btstructs.SNode`
         where : string
             Toggle 'local' or 'remote'
 
@@ -969,9 +1151,9 @@ class NeuronMorphology(object):
         radius1 = child1.content['p3d'].radius
         radius2 = child2.content['p3d'].radius
         if radius1 > radius2:
-            return radius1 / radius2
+            return old_div(radius1, radius2)
         else:
-            return radius2 / radius1
+            return old_div(radius2, radius1)
 
     def _get_child_nodes(self, node, where):
         if where == 'local':
@@ -1002,7 +1184,7 @@ class NeuronMorphology(object):
 
         Parameters
         ----------
-        node : :class:`btmorph.btstructs2.SNode2`
+        node : :class:`btmorph.btstructs.SNode`
         where : string
             either "local" or "remote". "Local" uses the immediate daughter
             points while "remote" uses the point just before the next
@@ -1030,7 +1212,7 @@ class NeuronMorphology(object):
         p_upper = 5.0  # THE associated mismatch MUST BE NEGATIVE
 
         best_n = scipy.optimize.fmin(mismatch,
-                                     (p_upper-p_lower)/2.0,
+                                     old_div((p_upper-p_lower),2.0),
                                      disp=False)
         if 0.0 < best_n < 5.0:
             return best_n
@@ -1046,7 +1228,7 @@ class NeuronMorphology(object):
 
         Parameters
         -----------
-        node : :class:`btmorph.btstructs2.SNode2`
+        node : :class:`btmorph.btstructs.SNode`
         where : string
             either 'local or 'remote'. 'Local' uses the immediate daughter
             points while "remote" uses the point just before the next
@@ -1063,8 +1245,8 @@ class NeuronMorphology(object):
         d1_diam = child1.content['p3d'].radius*2
         d2_diam = child2.content['p3d'].radius*2
 
-        return ((np.power(d1_diam, 1.5) + np.power(d2_diam, 1.5)) /
-                np.power(p_diam, 1.5))
+        return (old_div((np.power(d1_diam, 1.5) + np.power(d2_diam, 1.5)),
+                np.power(p_diam, 1.5)))
 
     def bifurcation_ralls_power_brute(self, node, where='local', min_v=0,
                                       max_v=5, steps=1000):
@@ -1078,7 +1260,7 @@ class NeuronMorphology(object):
 
         Parameters
         -----------
-        node : :class:`btmorph.btstructs2.SNode2`
+        node : :class:`btmorph.btstructs.SNode`
         where : string
             either 'local or 'remote'. 'Local' uses the immediate daughter
             points while "remote" uses the point just before the next
@@ -1143,7 +1325,7 @@ class NeuronMorphology(object):
 
         Parameters
         ---------
-        node : :class:`btmorph.btstructs2.SNode2`
+        node : :class:`btmorph.btstructs.SNode`
             Node of interest
         Returns
         ---------
@@ -1157,8 +1339,83 @@ class NeuronMorphology(object):
         if len(node.children) == 0:
             return 1
         # Not leaf
-        childrenHS = map(self.local_horton_strahler, node.children)
-        return max(childrenHS + [(min(childrenHS)+1)])
+        childrenHS = list(map(self.local_horton_strahler, node.children))
+        return max(childrenHS + [(min(childrenHS) + 1)])
+
+    def Burke_taper(self, node):
+        """
+        Calculate burke tapers of the path ending at the given node.
+        A path is defined as a stretch between
+        the soma and a bifurcation point, between bifurcation points,
+        or between a bifurcation point and a terminal point
+
+        Burke taper = (d_e - d_s) / l
+        where d_e and d_s are the diameters at the end and start, respectively,
+        of a path.
+
+
+        Ref: Burke, R E, W B Marks, and B Ulfhake.
+        "A Parsimonious Description of Motoneuron Dendritic Morphology Using
+        Computer Simulation."
+        The Journal of neuroscience (1992)
+
+        Parameters
+        ---------
+        node : :class:`btmorph.btstructs.SNode`
+            Node of interest
+
+        Returns
+        -------
+        List of burke tapers, each corresponding to one child
+        """
+        assert node in self._end_points + self._bif_points, \
+            'Burke Taper can only be calculated for the end_point or a ' +\
+            'bifurcation.'
+
+        d_e = 2 * node.content['p3d'].radius
+
+
+        if self.__tree.is_leaf(node):
+            path = self.__tree.path_to_root(node)
+        else:
+            path = self.__tree.path_to_root(node)[1:]
+
+        remote_parent = path[-1]
+        for n in path:
+            if len(n.children) >= 2:
+                remote_parent = n
+
+        d_s = 2 * remote_parent.content['p3d'].radius
+        pathLength = self.get_segment_pathlength(node)
+
+        burke_taper = old_div((d_e - d_s), pathLength)
+
+        return burke_taper
+
+    def tortuosity(self, node):
+        """
+        Calculate the tortuosity of the path ending at the node.
+        A path is defined as a stretch between
+        the soma and a bifurcation point, between bifurcation points,
+        or in between of a bifurcation point and a terminal point
+
+        tortuosity = (Euclidean distance between the ends of the path) /
+        (path length of the path)
+
+        Parameters
+        ---------
+        node : :class:`btmorph.btstructs.SNode`
+            Node of interest
+
+        Returns
+        -------
+        List of burke tapers, each corresponding to one child
+        """
+        assert node in self._end_points + self._bif_points, \
+            'Tortuosity can only be calculated for an end point or at a ' +\
+            'bifurcation.'
+
+        return old_div(self.get_segment_Euclidean_length(node), self.get_pathlength_to_root(node))
 
     def get_boundingbox(self):
         '''
@@ -1176,11 +1433,22 @@ class NeuronMorphology(object):
         for node in self._all_nodes:
             xyz = node.content['p3d'].xyz
             for i in (0, 1, 2):
-                if(xyz[i] < minv[i]):
+                if xyz[i] < minv[i]:
                     minv[i] = xyz[i]
-                if(xyz[i] > maxv[i]):
+                if xyz[i] > maxv[i]:
                     maxv[i] = xyz[i]
         return minv, maxv
+
+    def affineTransform(self, affineTransformationMatrix):
+        """
+        Returns a copy of self that is transformed by affineTransformMatrix
+        :param affineTransformationMatrix: numpy.ndarray of shape (4, 4)
+        :return: Neuron Morphology
+        """
+
+        newNM = NeuronMorphology()
+        newNM.tree = self.tree.affineTransformTree(affineTransformationMatrix)
+        return newNM
 
 
 class Tree(object):
@@ -1192,7 +1460,8 @@ class Tree(object):
     this is a generic implementation of a tree structure as a linked list.
     '''
 
-    def __init__(self, input_file=None, axis_config=[0, 1, 2]):
+    def __init__(self, input_file=None, axis_config=(0, 1, 2),
+                 correctIfSomaAbsent=False, ignore_type=False):
 
         """
         Default constructor.
@@ -1200,11 +1469,25 @@ class Tree(object):
         Parameters
         -----------
         input_file : :class:`str`
-            File name of neuron to be created,
+            File name of neuron to be created
+        axis_config: tuple of len 3
+            Specifying the column indices at which the x, y and z coordinates
+            are to be expected respectively.
+        correctIfSomaAbsent: bool
+            if True, then for trees whose roots are not of type 1, the roots are
+            manually set to be of type 1 and treated as they have one point soma.
+        ignore_type: bool
+            if True, ignore the 'type' value at column 2
         """
+
+        self.correctIfSomaAbsent = correctIfSomaAbsent
+        self.ignore_type = ignore_type
+
         if input_file is not None:
             self.root = None
-            self.read_SWC_tree_from_file(input_file)
+            self.read_SWC_tree_from_file(input_file,
+                                         correctIfSomaAbsent=correctIfSomaAbsent,
+                                         ignore_type=ignore_type)
         if (axis_config[0] is not 0 or axis_config[1]
                 is not 1 or axis_config[2] is not 2):  # switch axis
             if axis_config[0] == 0:
@@ -1338,7 +1621,7 @@ class Tree(object):
 
         Parameters
         -----------
-        Node : :class:`Node`
+        node : :class:`Node`
             Node to be removed
         """
         node.parent.remove_child(node)
@@ -1600,7 +1883,7 @@ class Tree(object):
 
         Parameters
         ----------
-        Node : :class:`Node`
+        node : :class:`Node`
             Node at which the path starts
 
         Returns
@@ -1643,7 +1926,48 @@ class Tree(object):
         if from_node.parent is not None:
             self._go_up_from_until(from_node.parent, to_node, n)
 
-    def read_SWC_tree_from_file(self, input_file, types=range(1, 10)):
+    def breadth_first_iterator_generator(self):
+        """
+        Generator function to produce an iterator that traverses breadth first through nodes of the tree.
+        Ex. [x for x in tree.breadth_first_iterator_generator] produces a list of nodes in breadth-first
+        traversal order
+        """
+
+        nodeQ = Queue()
+
+        nodeQ.put(self.root)
+
+        while not nodeQ.empty():
+
+            node = nodeQ.get()
+            children = dict((child.index, child) for child in node.children)
+            childrenIndsSorted = sorted(children.keys())
+            for childInd in childrenIndsSorted:
+                nodeQ.put(children[childInd])
+            yield node
+
+    def depth_first_iterator_generator(self):
+        """
+        Generator function to produce an iterator that traverses depth first through nodes of the tree.
+        Ex. [x for x in tree.breadth_first_iterator_generator] produces a list of nodes in breadth-first
+        traversal order
+        """
+
+        nodeQ = LifoQueue()
+
+        nodeQ.put(self.root)
+
+        while not nodeQ.empty():
+
+            node = nodeQ.get()
+            children = dict((child.index, child) for child in node.children)
+            childrenIndsSorted = sorted(children.keys())
+            for childInd in childrenIndsSorted:
+                nodeQ.put(children[childInd])
+            yield node
+
+    def read_SWC_tree_from_file(self, input_file, types=list(range(1, 10)),
+                                correctIfSomaAbsent=False, ignore_type=False):
 
         """
         Non-specific for a "tree data structure"
@@ -1659,132 +1983,144 @@ class Tree(object):
 
         However, two other options to describe the soma
         are still allowed and available, namely:
-        - soma absent: btmorph adds a 3-point soma in between of
-            [TO DEFINE/TODO]
-        - multiple cylinder: [TO DEFINE/TODO]
+        - soma absent: not implemented
+        - multiple cylinder: reduces it to a three point soma with the same surface
+
+        Parameters
+        -----------
+        input_file : :class:`str`
+            File name of neuron to be created
+        types: iterable of integers
+            Specifies the expected values for column 2 of an SWC file
+        correctIfSomaAbsent: bool
+            if True, then for trees whose roots are not of type 1, the roots are
+            manually set to be of type 1 and treated as they have one point soma.
+        ignore_type: bool
+            if True, the 'type' value of column 2 are ignored
+
 
         """
-        # check soma-representation: 3-point soma or a non-standard
-        # representation
-        self.soma_type = self._determine_soma_type(input_file)
-        print "NeuronMorphology::read_SWC_tree_from_file found soma_type=%i" \
-            % self.soma_type
 
-        f = open(input_file, 'r')
-        all_nodes = dict()
-        for line in f:
-            if not line.startswith('#'):
-                split = line.split()
-                index = int(split[0].rstrip())
-                swc_type = int(split[1].rstrip())
-                x = float(split[2].rstrip())
-                y = float(split[3].rstrip())
-                z = float(split[4].rstrip())
-                radius = float(split[5].rstrip())
-                parent_index = int(split[6].rstrip())
 
-                # 2015-06-17
-                if self.soma_type == 0 and index > 1:
-                    index = index + 2
-                if self.soma_type == 0 and parent_index > 1:
-                    parent_index = parent_index+2
+        swc_parsing = SWCParsing(input_file)
+        nTrees = swc_parsing.numberOfTrees()
 
-                if swc_type in types:
+        if nTrees > 1:
+
+            raise ValueError("Given SWC File {} has more than one trees".format(input_file))
+
+        else:
+
+            swcDatasetsTypes = swc_parsing.getSWCDatasetsTypes(correctIfSomaAbsent)
+
+            self.soma_type = list(swcDatasetsTypes.keys())[0]
+            swcData = list(swcDatasetsTypes.values())[0]
+
+            all_nodes = dict()
+            for line in swcData:
+
+                index = int(line[0])
+                swc_type = int(line[1])
+                x = float(line[2])
+                y = float(line[3])
+                z = float(line[4])
+                radius = float(line[5])
+                parent_index = int(line[6])
+
+                if swc_type in types or ignore_type:
                     tP3D = P3D(np.array([x, y, z]), radius, swc_type)
                     t_node = Node(index)
                     t_node.content = {'p3d': tP3D}
                     all_nodes[index] = (swc_type, t_node, parent_index)
+                    if parent_index < 0:
+                        if self.root is None:
+                            self.root = t_node
+                        else:
+                            raise ValueError("File {} has two roots!".format(input_file))
                 else:
                     # print type,index
                     pass
 
-        # print "len(all_nodes): ", len(all_nodes)
+            # print "len(all_nodes): ", len(all_nodes)
 
-        # IF 1-point soma representation
-        if self.soma_type == 0:
-            for index, (swc_type, node, parent_index) in all_nodes.items():
-                if index == 1:
-                    # print "Set soma -- 1-point soma"
-                    self.root = node
-                    """add 2 extra point because the internal representation
-                    relies on the 3-point soma position.
-                    Shift all subsequent indices by 2."""
-                    sp = node.content['p3d']
-                    """
-                     1 1 xs ys zs rs -1
-                     2 1 xs (ys-rs) zs rs 1
-                     3 1 xs (ys+rs) zs rs 1
-                    """
-                    pos1 = P3D([sp.xyz[0], sp.xyz[1]-sp.radius,
-                                sp.xyz[2]], sp.radius, 1)
-                    pos2 = P3D([sp.xyz[0], sp.xyz[1]+sp.radius,
-                                sp.xyz[2]], sp.radius, 1)
-                    sub1 = Node(2)
-                    sub1.content = {'p3d': pos1}
-                    sub2 = Node(3)
-                    sub2.content = {'p3d': pos2}
-                    self.add_node_with_parent(sub1, self.root)
-                    self.add_node_with_parent(sub2, self.root)
-                else:
-                    parent_node = all_nodes[parent_index][1]
-                    if parent_node is None:
-                        print("parent appears to be NONE")
-                    if parent_node.index > 1:
-                        parent_node.index = parent_node.index  # +2
-                    if node.index > 1:
-                        node.index = node.index  # +2
-                    self.add_node_with_parent(node, parent_node)
+            # IF 1-point soma representation
+            if self.soma_type == 0:
+                for index, (swc_type, node, parent_index) in all_nodes.items():
+                    if parent_index < 0:
+                        # Root has already been set above
 
-        # IF 3-point soma representation
-        if self.soma_type == 1:
-            for index, (swc_type, node, parent_index) in all_nodes.items():
-                if index == 1:
-                    # print "Set soma -- 3 point soma"
-                    self.root = node
-                elif index in (2, 3):
-                    # the 3-point soma representation
-                    # (http://neuromorpho.org/neuroMorpho/SomaFormat.html)
-                    self.add_node_with_parent(node, self.root)
-                else:
-                    parent_node = all_nodes[parent_index][1]
-                    self.add_node_with_parent(node, parent_node)
-        # IF multiple cylinder soma representation
-        elif self.soma_type == 2:
-            self.root = all_nodes[1][1]
-
-            # get all some info
-            soma_cylinders = []
-            connected_to_root = []
-            for index, (swc_type, node, parent_index) in all_nodes.items():
-                if swc_type == 1 and not index == 1:
-                    soma_cylinders.append((node, parent_index))
-                    if index > 1:
-                        connected_to_root.append(index)
-
-            # make soma
-            s_node_1, s_node_2 = self._make_soma_from_cylinders(soma_cylinders,
-                                                                all_nodes)
-
-            # add soma
-            self.root = all_nodes[1][1]
-            self.root.content["p3d"].radius = s_node_1.content["p3d"].radius
-            self.add_node_with_parent(s_node_1, self.root)
-            self.add_node_with_parent(s_node_2, self.root)
-
-            # add the other points
-            for index, (swc_type, node, parent_index) in all_nodes.items():
-                if swc_type == 1:
-                    pass
-                else:
-                    parent_node = all_nodes[parent_index][1]
-                    if parent_node.index in connected_to_root:
-                        self.add_node_with_parent(node, self.root)
+                        """add 2 extra point because the internal representation
+                        relies on the 3-point soma position.
+                        Their indices will be 1 and 2 greater, respectively,
+                        than the maximum of all indices"""
+                        sp = node.content['p3d']
+                        """
+                         1 1 xs ys zs rs -1
+                         2 1 xs (ys-rs) zs rs 1
+                         3 1 xs (ys+rs) zs rs 1
+                        """
+                        pos1 = P3D([sp.xyz[0], sp.xyz[1]-sp.radius,
+                                    sp.xyz[2]], sp.radius, 1)
+                        pos2 = P3D([sp.xyz[0], sp.xyz[1]+sp.radius,
+                                    sp.xyz[2]], sp.radius, 1)
+                        maxIndex = max(all_nodes.keys())
+                        sub1 = Node(maxIndex + 1)
+                        sub1.content = {'p3d': pos1}
+                        sub2 = Node(maxIndex + 2)
+                        sub2.content = {'p3d': pos2}
+                        self.add_node_with_parent(sub1, self.root)
+                        self.add_node_with_parent(sub2, self.root)
                     else:
+                        parent_node = all_nodes[parent_index][1]
                         self.add_node_with_parent(node, parent_node)
 
-        return self
+            # IF 3-point soma representation
+            elif self.soma_type == 1:
+                for index, (swc_type, node, parent_index) in all_nodes.items():
+                    if parent_index < 0:
+                        # Root has already been set above
+                        pass
+                    else:
+                        parent_node = all_nodes[parent_index][1]
+                        self.add_node_with_parent(node, parent_node)
+            # IF multiple cylinder soma representation
+            elif self.soma_type == 2:
+                # Root has already been set above
 
-    def write_SWC_tree_to_file(self, input_file):
+                # get all some info
+                soma_cylinders = []
+                connected_to_root = []
+                for index, (swc_type, node, parent_index) in all_nodes.items():
+                    if swc_type == 1 and parent_index > 0:
+                        soma_cylinders.append((node, parent_index))
+                        connected_to_root.append(index)
+
+                # make soma
+                s_node_1, s_node_2 = self._make_soma_from_cylinders(soma_cylinders,
+                                                                    all_nodes)
+
+                # add soma
+                self.root.content["p3d"].radius = s_node_1.content["p3d"].radius
+                self.add_node_with_parent(s_node_1, self.root)
+                self.add_node_with_parent(s_node_2, self.root)
+
+                # add the other points
+                for index, (swc_type, node, parent_index) in all_nodes.items():
+                    if swc_type == 1:
+                        pass
+                    else:
+                        parent_node = all_nodes[parent_index][1]
+                        if parent_node.index in connected_to_root:
+                            self.add_node_with_parent(node, self.root)
+                        else:
+                            self.add_node_with_parent(node, parent_node)
+
+            else:
+                raise NotImplementedError("No Soma Found for {}".format(input_file))
+
+            return self
+
+    def write_SWC_tree_to_file(self, output_file):
 
         """
         Non-specific for a tree.
@@ -1794,44 +2130,27 @@ class Tree(object):
 
          Parameters
         -----------
-        input_file : :class:`str`
+        output_file : :class:`str`
             File name to write SWC to
 
         """
-        writer = open(input_file, 'w')
-        nodes = self.get_nodes()
-        nodes.sort()
+        swcData = []
 
-        # 3 point soma representation (See Neuromoprho.org FAQ)
-        s1p = nodes[0].content["p3d"]
-        s1_xyz = s1p.xyz
-        s2p = nodes[1].content["p3d"]
-        s2_xyz = s2p.xyz
-        s3p = nodes[2].content["p3d"]
-        s3_xyz = s3p.xyz
-        soma_str = "1 1 " + str(s1_xyz[0]) + " " + str(s1_xyz[1]) + \
-                   " " + str(s1_xyz[2]) + " " + str(s1p.radius) + " -1\n" + \
-                   "2 1 " + str(s2_xyz[0]) + " " + str(s2_xyz[1]) + \
-                   " " + str(s2_xyz[2]) + " " + str(s2p.radius) + " 1\n" + \
-                   "3 1 " + str(s3_xyz[0]) + " " + str(s3_xyz[1]) + \
-                   " " + str(s3_xyz[2]) + " " + str(s3p.radius) + " 1\n"
-        writer.write(soma_str)
-        writer.flush()
-
-        # add the soma compartment, then enter the loop
-        for node in nodes[3:]:
-            p3d = node.content['p3d']  # update 2013-03-08
-            xyz = p3d.xyz
+        for node in self.breadth_first_iterator_generator():
+            index = node.index
+            p3d = node.content["p3d"]
+            nodeType = p3d.segtype
+            x, y, z = p3d.xyz
             radius = p3d.radius
-            tt = p3d.segtype
-            p3d_string = (str(node.index)+' '+str(tt) + ' ' + str(xyz[0]) +
-                          ' ' + str(xyz[1]) + ' ' + str(xyz[2]) +
-                          ' ' + str(radius) + ' ' + str(node.parent.index))
-            # print 'p3d_string: ', p3d_string
-            writer.write(p3d_string + '\n')
-            writer.flush()
-        writer.close()
-        # print 'STree::writeSWCTreeToFile -> finished. Tree in >',fileN,'<'
+            parent = node.parent
+            if parent is None:
+                parentIndex = -1
+            else:
+                parentIndex = parent.index
+
+            swcData.append([index, nodeType, x, y, z, radius, parentIndex])
+
+        writeSWC_numpy(output_file, swcData)
 
     def _make_soma_from_cylinders(self, soma_cylinders, all_nodes):
 
@@ -1848,11 +2167,10 @@ class Tree(object):
             # print "(node %i) surf as cylinder:  %f (R=%f, H=%f), P=%s" %
             # (node.index,surf,n.radius,H,p)
             total_surf = total_surf+surf
-        print "found 'multiple cylinder soma' w/ total soma surface=", \
-            total_surf
+        print("found 'multiple cylinder soma' w/ total soma surface={}".format(total_surf))
 
         # define appropriate radius
-        radius = np.sqrt(total_surf / (4 * np.pi))
+        radius = np.sqrt(old_div(total_surf, (4 * np.pi)))
         # print "found radius: ", radius
 
         s_node_1 = Node(2)
@@ -1866,8 +2184,8 @@ class Tree(object):
 
         return s_node_1, s_node_2
 
-
-    def _determine_soma_type(self,file_n):
+    @staticmethod
+    def determine_soma_type(file_n):
         """
         Costly method to determine the soma type used in the SWC file.
         This method searches the whole file for soma entries.  
@@ -1886,7 +2204,7 @@ class Tree(object):
             2: multiple cylinder description,
             3: otherwise [not suported in btmorph]
         """
-        file = open(file_n,"r")
+        file = open(file_n, "r")
         somas = 0
         for line in file:
             if not line.startswith('#') :
@@ -1898,7 +2216,7 @@ class Tree(object):
         file.close()
         if somas == 3:
             return 1
-        elif somas ==1:
+        elif somas == 1:
             return 0
         elif somas > 3:
             return 2
@@ -1937,17 +2255,17 @@ class Tree(object):
 
         Parameters
         ----------
-        tree : :class:`btmorph.btstructs2.STree2`
+        tree : :class:`btmorph.btstructs.STree2`
         A tree
 
         Returns
         --------
-        tree : :class:`btmorph.btstructs2.STree2`
+        tree : :class:`btmorph.btstructs.STree2`
             New flattened tree
         """
         nodes = self.get_nodes()
         N = len(nodes)
-        coords = map(lambda n: n.content['p3d'].xyz, nodes)
+        coords = [n.content['p3d'].xyz for n in nodes]
         points = transpose(coords)
         _, score, _ = self._pca(points.T)
         if threeD is False:
@@ -1966,6 +2284,24 @@ class Tree(object):
         import os
         os.remove('tmpTree_3d_' + now + '.swc')
         return self
+
+    def affineTransformTree(self, affineTransformMatrix):
+        """
+        Returns a copy with affineTransformMatrix applied to each node of the tree.
+        :param affineTransformMatrix: np.ndarray of shape (4, 4)
+        :return: new transformed Neuron Morphology
+        """
+
+        tempSWC = NamedTemporaryFile(mode="w")
+        self.write_SWC_tree_to_file(tempSWC.name)
+
+        transTempSWC = NamedTemporaryFile(mode="w")
+
+        transSWC(tempSWC.name, affineTransformMatrix[:3, :3],
+                 affineTransformMatrix[:3, 3], transTempSWC.name)
+
+        return Tree(transTempSWC.name,
+                    ignore_type=self.ignore_type)
 
     def __iter__(self):
 
