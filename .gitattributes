@@ -1,0 +1,5 @@
+# Set the default behavior, in case people don't have core.autocrlf set.
+# default is the unix encoding
+* text eol=lf
+
+*swc text=auto
